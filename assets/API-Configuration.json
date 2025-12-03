@@ -1,0 +1,15 @@
+{
+    "environment": "development",
+    "version": "1",
+    "development": {
+      
+        "hostUrl":"https://hyworth.onerooftechnologiesllp.com",
+        "timeout": 120,
+        "retry": 3
+    },
+    "production": {
+        "hostUrl": "https://hyworth.onerooftechnologiesllp.com",
+        "timeout": 120,
+        "retry": 3
+    }
+}
