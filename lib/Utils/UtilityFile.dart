@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:path/path.dart';
 
@@ -14,16 +15,25 @@ class Utility extends ChangeNotifier {
   factory Utility() {
     return _instance;
   }
-
-  void loadAPIConfig(BuildContext context) {
-    DefaultAssetBundle.of(context)
-        .loadString('assets/API-Configuration.json')
-        .then((value) {
+ Future<void> loadAPIConfig() async {
+    try {
+      final value = await rootBundle.loadString('assets/API-Configuration.json');
       APIManager().loadConfiguration(value);
-    }).catchError((error) {
-      print('error loading json');
-    });
+      print("API config loaded successfully");
+    } catch (e) {
+      print("Error loading API config: $e");
+    }
   }
+  // void loadAPIConfig(BuildContext context) {
+    
+  //   DefaultAssetBundle.of(context)
+  //       .loadString('assets/API-Configuration.json')
+  //       .then((value) {
+  //     APIManager().loadConfiguration(value);
+  //   }).catchError((error) {
+  //     print('error loading json');
+  //   });
+  // }
 
   bool isValidPhoneNumber(String input) {
     final RegExp regex = new RegExp(r'^(?:[+0]9)?[0-9]{10,}$');

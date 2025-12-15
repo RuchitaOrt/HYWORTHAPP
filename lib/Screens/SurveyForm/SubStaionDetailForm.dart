@@ -53,31 +53,41 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
         SearchableDropdown(
           title: t(context, 'substation_district'),
           hintText: t(context, "substation_district_hint"),
-          asyncItems: (filter, loadProps) async {
-            final districts = await basicFormProvider.fetchDistricts();
-            final districtMaps =
-                districts.map((d) => {'id': d.id, 'name': d.name}).toList();
+           asyncItems: (filter, loadProps) async {
+            final districtList = await basicFormProvider.fetchDistrict();
 
-            if (filter.isEmpty) return districtMaps;
+            // Convert to Map<String, String>
+            final stateMaps = districtList.map((d) {
+              return {
+                'id': (d.id).toString(),
+                'district_name': d.districtName ?? "",
+              };
+            }).toList();
 
-            return districtMaps
-                .where((d) =>
-                    d['id']!.contains(filter) ||
-                    d['name']!.toLowerCase().contains(filter.toLowerCase()))
-                .toList();
+            if (filter.isEmpty) return stateMaps;
+
+            final lowerFilter = filter.toLowerCase();
+
+            return stateMaps.where((d) {
+              final idString = d['id']!;
+              final nameString = d['district_name']!.toLowerCase();
+
+              return idString.contains(lowerFilter) ||
+                  nameString.contains(lowerFilter);
+            }).toList();
           },
             selectedItem: (basicFormProvider.selectedsubstationDistrict != null &&
                  basicFormProvider.selectedsubstationDistrict!['id']!.isNotEmpty)
       ? basicFormProvider.selectedsubstationDistrict
       : null,
-          filterKeys: ['id', 'name'],
+          filterKeys: ['id', 'district_name'],
           compareKey: 'id',
-          displayString: (item) => "${item['name']}",
+          displayString: (item) => "${item['district_name']}",
           onChanged: (value) {
             print("Selected District: $value");
             basicFormProvider.selectedsubstationDistrict = {
               'id': "${value!['id']}",
-              'name': "${value!['name']}",
+              'name': "${value!['district_name']}",
             };
           },
         ),
@@ -86,21 +96,31 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
           title: t(context, 'substation_taluka'),
           hintText: t(context, "substation_taluka_hint"),
           asyncItems: (filter, loadProps) async {
-            final taluka = await basicFormProvider.fetchTaluka();
-            final talukaMaps =
-                taluka.map((d) => {'id': d.id, 'name': d.name}).toList();
+            final stateList = await basicFormProvider.fetchTaluka();
 
-            if (filter.isEmpty) return talukaMaps;
+            // Convert to Map<String, String>
+            final stateMaps = stateList.map((d) {
+              return {
+                'id': (d.id ?? 0).toString(),
+                'taluka_name': d.talukaName ?? "",
+              };
+            }).toList();
 
-            return talukaMaps
-                .where((d) =>
-                    d['id']!.contains(filter) ||
-                    d['name']!.toLowerCase().contains(filter.toLowerCase()))
-                .toList();
+            if (filter.isEmpty) return stateMaps;
+
+            final lowerFilter = filter.toLowerCase();
+
+            return stateMaps.where((d) {
+              final idString = d['id']!;
+              final nameString = d['taluka_name']!.toLowerCase();
+
+              return idString.contains(lowerFilter) ||
+                  nameString.contains(lowerFilter);
+            }).toList();
           },
-          filterKeys: ['id', 'name'],
+          filterKeys: ['id', 'taluka_name'],
           compareKey: 'id',
-          displayString: (item) => "${item['name']}",
+          displayString: (item) => "${item['taluka_name']}",
           selectedItem: (basicFormProvider.selectedsubstationTaluka != null &&
                  basicFormProvider.selectedsubstationTaluka!['id']!.isNotEmpty)
       ? basicFormProvider.selectedsubstationTaluka
@@ -109,43 +129,53 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
             print("Selected Taluka: $value");
             basicFormProvider.selectedsubstationTaluka = {
               'id': "${value!['id']}",
-              'name': "${value!['name']}",
+              'name': "${value!['taluka_name']}",
             };
           },
         ),
 
 // Village dropdown
-        SearchableDropdown(
-          title: t(context, 'substation_village'),
-          hintText: t(context, "substation_village_hint"),
-          asyncItems: (filter, loadProps) async {
-            final village = await basicFormProvider.fetchVillage();
-            final villageMaps =
-                village.map((d) => {'id': d.id, 'name': d.name}).toList();
+      //   SearchableDropdown(
+      //     title: t(context, 'substation_village'),
+      //     hintText: t(context, "substation_village_hint"),
+      //       asyncItems: (filter, loadProps) async {
+      //       final stateList = await basicFormProvider.fe();
 
-            if (filter.isEmpty) return villageMaps;
+      //       // Convert to Map<String, String>
+      //       final stateMaps = stateList.map((d) {
+      //         return {
+      //           'id': (d.id ?? 0).toString(),
+      //           'village_name': d.villageName ?? "",
+      //         };
+      //       }).toList();
 
-            return villageMaps
-                .where((d) =>
-                    d['id']!.contains(filter) ||
-                    d['name']!.toLowerCase().contains(filter.toLowerCase()))
-                .toList();
-          },
-          filterKeys: ['id', 'name'],
-          compareKey: 'id',
-          displayString: (item) => "${item['name']}",
-          selectedItem: (basicFormProvider.selectedsubstationVillage != null &&
-                 basicFormProvider.selectedsubstationVillage!['id']!.isNotEmpty)
-      ? basicFormProvider.selectedsubstationVillage
-      : null,
-          onChanged: (value) {
-            print("Selected Village: $value");
-            basicFormProvider.selectedsubstationVillage = {
-              'id': "${value!['id']}",
-              'name': "${value!['name']}",
-            };
-          },
-        ),
+      //       if (filter.isEmpty) return stateMaps;
+
+      //       final lowerFilter = filter.toLowerCase();
+
+      //       return stateMaps.where((d) {
+      //         final idString = d['id']!;
+      //         final nameString = d['village_name']!.toLowerCase();
+
+      //         return idString.contains(lowerFilter) ||
+      //             nameString.contains(lowerFilter);
+      //       }).toList();
+      //     },
+      //     filterKeys: ['id', 'village_name'],
+      //     compareKey: 'id',
+      //     displayString: (item) => "${item['village_name']}",
+      //     selectedItem: (basicFormProvider.selectedsubstationVillage != null &&
+      //            basicFormProvider.selectedsubstationVillage!['id']!.isNotEmpty)
+      // ? basicFormProvider.selectedsubstationVillage
+      // : null,
+      //     onChanged: (value) {
+      //       print("Selected Village: $value");
+      //       basicFormProvider.selectedsubstationVillage = {
+      //         'id': "${value!['id']}",
+      //         'name': "${value['village_name']}",
+      //       };
+      //     },
+      //   ),
 
 // CustomTextFieldWidget(
 //   isMandatory: true,

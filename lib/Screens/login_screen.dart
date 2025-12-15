@@ -48,8 +48,14 @@ class _LoginScreenContentState extends State<_LoginScreenContent> {
     // TODO: implement initState
     super.initState();
     getVersion();
-    Utility().loadAPIConfig(context);
+   
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+  final signInProvider =  Provider.of<SignInProvider>(context, listen: false);
+   signInProvider.emailController.text="admin@hyworth.com";
+   signInProvider.passwordController.text="admin@!23#";
+  });
 
+  
     
   }
   getVersion()
@@ -58,11 +64,12 @@ await getAppVersion(context);
 
 ;
   }
+  
   @override
   Widget build(BuildContext context) {
     final signInProvider = Provider.of<SignInProvider>(context);
-   signInProvider.emailController.text="admin@hyworth.com";
-   signInProvider.passwordController.text="admin@!23#";
+  //  signInProvider.emailController.text="admin@hyworth.com";
+  //  signInProvider.passwordController.text="admin@!23#";
     final BorderRadius borderRadius =
         const BorderRadius.all(Radius.circular(8));
     final BorderSide focusedBorder = const BorderSide(

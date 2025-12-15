@@ -70,7 +70,11 @@ void _pickLocation(BuildContext context, String formType) async {
   'id': '-1',
   'name': result['district'],
 };
-      basicProvider.landStateController.text = result['state'];
+ basicProvider.selectedLandState={
+  'id': '-1',
+  'name': result['states'],
+};
+      // basicProvider.landStateController.text = result['state'];
       basicProvider.landLatitudeController.text = result['lat'].toString();
       basicProvider.landLonitudeController.text = result['lng'].toString();
     } else {

@@ -121,16 +121,15 @@ class SignInProvider with ChangeNotifier {
       APIManager().apiRequest(routeGlobalKey.currentContext!, API.signIn,
           (response) async {
         LoginResponse resp = response;
-
+        print("-----TOKEN FROM API____");
+print(resp.token);
         if (resp.status == true) {
           showToast(resp.message);
           SPManager().setAuthToken(resp.token);
           final surveyProvider = Provider.of<AppProvider>(
               routeGlobalKey.currentContext!,
               listen: false);
-          await surveyProvider.loadSPendingurveys();
-          await surveyProvider.loadCompletedSurveys();
-          await surveyProvider.loadSurveys();
+            
           final result =
               await Navigator.of(routeGlobalKey.currentContext!).push(
             createSlideFromBottomRoute(

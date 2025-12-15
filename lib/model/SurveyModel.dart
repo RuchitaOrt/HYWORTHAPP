@@ -49,6 +49,7 @@ class SurveyModel {
   final int? updatedsurveyDate;
   final String?
       surveyStatus; //pending,rejected,required,not required,await confirmation,rejected
+       final String? landStateID;
   final String? landDistrictID;
   final String? landTalukaID;
   final String? landVillageID;
@@ -104,6 +105,7 @@ class SurveyModel {
     this.surveyStatus,
     this.landDistrictID,
     this.landTalukaID,
+    this.landStateID,
     this.landVillageID,
     this.substationDistrictID,
     this.substationTalukaID,
@@ -158,6 +160,7 @@ class SurveyModel {
         "surveyDate": surveyDate,
         "updatedsurveyDate": updatedsurveyDate,
         'surveyStatus': surveyStatus,
+         "landStateID":landStateID,
         "landDistrictID": landDistrictID,
         "landTalukaID": landTalukaID,
         "landVillageID": landVillageID,
@@ -216,6 +219,7 @@ class SurveyModel {
         "surveyDate": surveyDate,
         "updatedsurveyDate": updatedsurveyDate,
         "surveyStatus": surveyStatus,
+       "landStateID":landStateID,
         "landDistrictID": landDistrictID,
         "landTalukaID": landTalukaID,
         "landVillageID": landVillageID,
@@ -270,11 +274,12 @@ class SurveyModel {
       consentForms: List<String>.from(jsonDecode(json["consentForms"] ?? '[]')),
       surveyDate: json['surveyDate'],
       updatedsurveyDate: json['updatedsurveyDate'],
-      surveyStatus: json["surveyStatus"],
+      surveyStatus: json["surveyStatus"] ?? "",
       landDistrictID: json["landDistrictID"],
       landTalukaID: json["landTalukaID"],
       landVillageID: json['landVillageID'],
       substationDistrictID: json["substationDistrictID"],
       substationTalukaID: json['substationTalukaID'],
+      landStateID:json['landStateID'],
       substationVillageID: json['substationVillageID']);
 }

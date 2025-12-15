@@ -78,7 +78,7 @@ class _DetailFormState extends State<DetailForm> {
     [
       // provider.solarCapacityController,
       // provider.gridConnectivityController,
-      provider.landStateController,
+      // provider.landStateController,
       // provider.landDistrictController,
       // provider.landTalukaController,
       // provider.landVillageController,
@@ -126,11 +126,14 @@ class _DetailFormState extends State<DetailForm> {
           widget.surveyListing!.landLatitude!.toString();
       provider.landLonitudeController.text =
           widget.surveyListing!.landLongitude!.toString();
-      provider.landStateController.text =
-          (widget.surveyListing!.landState == null ||
-                  widget.surveyListing!.landState == "")
-              ? ""
-              : widget.surveyListing!.landState!;
+      provider.selectedLandState ={
+        'id': widget.surveyListing!.landState!,
+        'name': widget.surveyListing!.landVillage!,
+      };
+          // (widget.surveyListing!.landState == null ||
+          //         widget.surveyListing!.landState == "")
+          //     ? ""
+          //     : widget.surveyListing!.landState!;
       // provider.landVillageController.text =
       //     widget.surveyListing!.landVillage! ?? "";
       provider.selectedLandVillage = {
@@ -271,7 +274,7 @@ class _DetailFormState extends State<DetailForm> {
             surveyId:
                 widget.surveyListing!.surveyId.toString() ?? "", // never null
             userId: "1",
-            landState: basicFormProvider.landStateController.text ?? "",
+            landState: basicFormProvider.selectedLandState!['name'] ?? "",
             landDistrict: basicFormProvider.selectedLandDistrict!['name'],
             landTaluka: basicFormProvider.selectedLandTaluka!['name'] ?? "",
             landVillage: basicFormProvider.selectedLandVillage!['name'] ?? "",
@@ -357,7 +360,7 @@ class _DetailFormState extends State<DetailForm> {
         SurveyModel survey = SurveyModel(
             surveyId: await generateSurveyId() ?? "", // never null
             userId: "1",
-            landState: basicFormProvider.landStateController.text ?? "",
+            landState: basicFormProvider.selectedLandState!['name'] ?? "",
             landDistrict: basicFormProvider.selectedLandDistrict!['name'] ?? "",
             landTaluka: basicFormProvider.selectedLandTaluka!['name'] ?? "",
             landVillage: basicFormProvider.selectedLandVillage!['name'] ?? "",
@@ -526,8 +529,8 @@ class _DetailFormState extends State<DetailForm> {
                                 "", // never null
                             userId: "1",
                             landState:
-                                basicFormProvider.landStateController.text ??
-                                    "",
+                                basicFormProvider.selectedLandState?['name'] ??
+                                "",
                             landDistrict: basicFormProvider
                                     .selectedLandDistrict?['name'] ??
                                 "",
@@ -618,7 +621,7 @@ class _DetailFormState extends State<DetailForm> {
                             surveyId:
                                 await generateSurveyId() ?? "", // never null
                             userId: "1",
-                            landState: basicFormProvider.landStateController.text ??
+                            landState: basicFormProvider.selectedLandState?['name'] ??
                                 "",
                             landDistrict:
                                 (basicFormProvider.selectedLandDistrict == null ||

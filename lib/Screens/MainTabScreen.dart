@@ -5,6 +5,7 @@ import 'package:hyworth_land_survey/Provider/app_provider.dart';
 import 'package:hyworth_land_survey/Screens/SurveyForm/AddConsentForm.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
 import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
+import 'package:hyworth_land_survey/main.dart';
 import 'package:provider/provider.dart'; // <-- import provider
 import 'package:hyworth_land_survey/Screens/ConsentListingScreen.dart';
 import 'package:hyworth_land_survey/Screens/DashboardScreen.dart';
@@ -53,7 +54,18 @@ class _MaintabscreenState extends State<Maintabscreen> {
     // TODO: implement initState
     super.initState();
     _selectedIndex = widget.selectedIndex;
-  }
+  Future.microtask(() => getData());
+}
+void getData() async {
+  final provider = context.read<AppProvider>();
+
+  await provider.fetchLandList();
+  await provider.loadSPendingurveys();
+  await provider.loadCompletedSurveys();
+  await provider.loadSurveys();
+
+  setState(() {}); // 🔥 force UI refresh
+}
 
   @override
   Widget build(BuildContext context) {
