@@ -56,6 +56,7 @@ class SurveyModel {
   final String? substationDistrictID;
   final String? substationTalukaID;
   final String? substationVillageID;
+  
   SurveyModel({
     this.id, // nullable for new inserts
     this.surveyId,
@@ -282,4 +283,43 @@ class SurveyModel {
       substationTalukaID: json['substationTalukaID'],
       landStateID:json['landStateID'],
       substationVillageID: json['substationVillageID']);
+}
+class SurveyDetailVM {
+  final SurveyModel survey;
+  final List<SurveyMediaModel> landPictures;
+  final List<SurveyMediaModel> surveyForms;
+  final List<SurveyMediaModel> consentForms;
+
+  SurveyDetailVM({
+    required this.survey,
+    required this.landPictures,
+    required this.surveyForms,
+    required this.consentForms,
+  });
+}
+class SurveyMediaModel {
+  final String localId;
+  final int surveyLocalId;
+  final String? serverMediaId;
+  final MediaTypeValue mediaType;
+  final String path;
+  final bool isSynced;
+  final bool isDeleted;
+  final int createdAt;
+
+  SurveyMediaModel({
+    required this.localId,
+    required this.surveyLocalId,
+    this.serverMediaId,
+    required this.mediaType,
+    required this.path,
+    required this.isSynced,
+    required this.isDeleted,
+    required this.createdAt,
+  });
+}
+enum MediaTypeValue {
+  landPicture,
+  surveyForm,
+  consentForm,
 }

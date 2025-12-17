@@ -87,7 +87,7 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
             print("Selected District: $value");
             basicFormProvider.selectedsubstationDistrict = {
               'id': "${value!['id']}",
-              'name': "${value!['district_name']}",
+              'district_name': "${value!['district_name']}",
             };
           },
         ),
@@ -129,17 +129,51 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
             print("Selected Taluka: $value");
             basicFormProvider.selectedsubstationTaluka = {
               'id': "${value!['id']}",
-              'name': "${value!['taluka_name']}",
+              'taluka_name': "${value!['taluka_name']}",
             };
           },
         ),
 
 // Village dropdown
+SearchableDropdown(
+  title: t(context, 'substation_village'),
+  hintText: t(context, "substation_village_hint"),
+
+  selectedItem: (basicFormProvider.selectedsubstationVillage != null &&
+          basicFormProvider.selectedsubstationVillage!['id']!.isNotEmpty)
+      ? basicFormProvider.selectedsubstationVillage
+      : null,
+
+asyncItems: (filter, loadProps) async {
+  final rows = await basicFormProvider.searchVillage(filter);
+        print("Village");
+print(rows.length);
+  return rows.map<Map<String, String>>((e) {
+    return {
+      'id': e['id'].toString(),
+      'village_name': (e['village_name'] ?? "").toString(),
+    };
+  }).toList();
+
+  
+},
+
+  filterKeys: ['id', 'village_name'],
+  compareKey: 'id',
+  displayString: (item) => item['village_name'] ?? "",
+
+  onChanged: (value) {
+    basicFormProvider.selectedsubstationVillage = {
+      'id': value!['id']!,
+      'village_name': value['village_name']!,
+    };
+  },
+),
       //   SearchableDropdown(
       //     title: t(context, 'substation_village'),
       //     hintText: t(context, "substation_village_hint"),
       //       asyncItems: (filter, loadProps) async {
-      //       final stateList = await basicFormProvider.fe();
+      //       final stateList = await basicFormProvider.fet();
 
       //       // Convert to Map<String, String>
       //       final stateMaps = stateList.map((d) {

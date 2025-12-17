@@ -52,47 +52,51 @@ void _pickLocation(BuildContext context, String formType) async {
     print("Lat: ${result['lat']}");
     print("Lng: ${result['lng']}");
     print("Address: ${result['address']}");
+    print("Address taluka: ${result['taluka']}");
+    print("Address village: ${result['village']}");
+    print("Address district: ${result['district']}");
+    print("Address states: ${result['state']}");
     final basicProvider =
         Provider.of<BasicFormProvider>(context, listen: false);
     if (formType == "Basic") {
-    //  basicProvider.selectedLandTaluka!['name'] = result['taluka'];
-     basicProvider.selectedLandTaluka={
-  'id': '-1',
-  'name': result['taluka'],
-};
-    //  basicProvider.selectedLandVillage!['name'] = result['village'];
-     basicProvider.selectedLandVillage={
-  'id': '-1',
-  'name': result['village'],
-};
+      //  basicProvider.selectedLandTaluka!['name'] = result['taluka'];
+      basicProvider.selectedLandTaluka = {
+        'id': '-1',
+        'taluka_name': result['taluka'] ?? "",
+      };
+      //  basicProvider.selectedLandVillage!['name'] = result['village'];
+      basicProvider.selectedLandVillage = {
+        'id': '-1',
+        'village_name': result['village'] ?? "",
+      };
       // basicProvider.selectedLandDistrict!['name'] = result['district'];
-      basicProvider.selectedLandDistrict={
-  'id': '-1',
-  'name': result['district'],
-};
- basicProvider.selectedLandState={
-  'id': '-1',
-  'name': result['states'],
-};
+      basicProvider.selectedLandDistrict = {
+        'id': '-1',
+        'district_name': result['district'] ?? "",
+      };
+      basicProvider.selectedLandState = {
+        'id': '-1',
+        'name': result['state'] ?? "",
+      };
       // basicProvider.landStateController.text = result['state'];
       basicProvider.landLatitudeController.text = result['lat'].toString();
       basicProvider.landLonitudeController.text = result['lng'].toString();
     } else {
       // basicProvider.selectedsubstationTaluka!['name']  = result['taluka'];
-      basicProvider.selectedsubstationTaluka={
-  'id': '-1',
-  'name': result['taluka'],
-};
+      basicProvider.selectedsubstationTaluka = {
+        'id': '-1',
+        'taluka_name': result['taluka'],
+      };
       // basicProvider.selectedsubstationVillage!['name']  = result['village'];
-       basicProvider.selectedsubstationVillage={
-  'id': '-1',
-  'name': result['village'],
-};
+      basicProvider.selectedsubstationVillage = {
+        'id': '-1',
+        'village_name': result['village'],
+      };
       // basicProvider.selectedsubstationDistrict!['name'] = result['district'];
- basicProvider.selectedsubstationDistrict={
-  'id': '-1',
-  'name': result['district'],
-};
+      basicProvider.selectedsubstationDistrict = {
+        'id': '-1',
+        'district_name': result['district'],
+      };
       basicProvider.subStationLatitudeController.text =
           result['lat'].toString();
       basicProvider.subStationLongitudeController.text =

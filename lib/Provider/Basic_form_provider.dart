@@ -1,12 +1,23 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
+import 'package:hyworth_land_survey/Screens/MainTabScreen.dart';
+import 'package:hyworth_land_survey/Utils/APIManager.dart';
+import 'package:hyworth_land_survey/Utils/SPManager.dart';
+import 'package:hyworth_land_survey/main.dart';
 
 import 'package:hyworth_land_survey/model/LandDistrictModel.dart';
 import 'package:hyworth_land_survey/model/LandStateModel.dart';
 import 'package:hyworth_land_survey/model/LandTalukaModel.dart';
 import 'package:hyworth_land_survey/model/LandVillagesModel.dart';
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'package:hyworth_land_survey/model/SurveyModel.dart';
+import 'package:hyworth_land_survey/widgets/createSlideFromLeftRoute.dart';
+
+import 'package:mime/mime.dart';
 
 class BasicFormProvider extends ChangeNotifier {
   TextEditingController solarCapacityController = TextEditingController();
@@ -19,27 +30,27 @@ class BasicFormProvider extends ChangeNotifier {
   };
   Map<String, String>? selectedLandDistrict = {
     'id': '',
-    'name': 'Select District',
+    'district_name': 'Select District',
   };
   Map<String, String>? selectedLandTaluka = {
     'id': '',
-    'name': 'Select Taluka',
+    'taluka_name': 'Select Taluka',
   };
   Map<String, String>? selectedLandVillage = {
     'id': '',
-    'name': 'Select Village',
+    'village_name': 'Select Village',
   };
   Map<String, String>? selectedsubstationDistrict = {
     'id': '',
-    'name': 'Select Substation District',
+    'district_name': 'Select Substation District',
   };
   Map<String, String>? selectedsubstationTaluka = {
     'id': '',
-    'name': 'Select Substation Taluka',
+    'taluka_name': 'Select Substation Taluka',
   };
   Map<String, String>? selectedsubstationVillage = {
     'id': '',
-    'name': 'Select Substation Village',
+    'village_name': 'Select Substation Village',
   };
   // TextEditingController landTalukaController = TextEditingController();
   // TextEditingController landVillageController = TextEditingController();
@@ -126,34 +137,34 @@ class BasicFormProvider extends ChangeNotifier {
   }
 
   bool get ismediaFilesCalimComplete {
-    return mediaFiles.every((file) => file != null);
+    return OtherLandmediaFiles.every((file) => file != null);
   }
 
-  final List<File?> mediaFiles = List.generate(7, (index) => null); // 8 fields
+  final List<File?> OtherLandmediaFiles = List.generate(7, (index) => null); // 8 fields
 
   bool get isMediaValid {
-    return mediaFiles.every((file) => file != null);
+    return OtherLandmediaFiles.every((file) => file != null);
   }
 
   void setMediaFile(int index, File file) {
-    mediaFiles[index] = file;
+    OtherLandmediaFiles[index] = file;
     notifyListeners();
   }
 
   void removeMediaFile(int index) {
-    mediaFiles[index] = null;
+    OtherLandmediaFiles[index] = null;
     notifyListeners();
   }
 
-  File? mediaFile; // single file instead of list
+  File? surveyFormsmediaFile; // single file instead of list
 
   void setImage(File file) {
-    mediaFile = file;
+    surveyFormsmediaFile = file;
     notifyListeners();
   }
 
   void removeImage() {
-    mediaFile = null;
+    surveyFormsmediaFile = null;
     notifyListeners();
   }
 
@@ -299,4 +310,139 @@ Future<List<Map<String, dynamic>>> searchVillage(String filter) async {
     _rentLeaseOption = option;
     notifyListeners(); // notify UI
   }
+
+
+
+  Future<void> submitLandSurvey( SurveyModel surveyModel) async {
+  
+  var uri = Uri.parse(APIManager.createLAndSurvey);
+  
+  // Creating a multipart request
+  var request = http.MultipartRequest('POST', uri);
+  print("APIManager.createLAndSurvey");
+print(APIManager.createLAndSurvey);
+  // Add the post text as form data
+  request.fields['survey_id'] = surveyModel.surveyId.toString();
+request.fields['land_location'] = surveyModel.landLocation ?? "";
+
+request.fields['land_state_id'] = surveyModel.landStateID.toString();
+request.fields['land_state_name'] = surveyModel.landState?? "";
+
+request.fields['land_district_id'] = surveyModel.landDistrictID?? "";
+request.fields['land_district_name'] =surveyModel.landDistrict?? "";
+
+request.fields['land_taluka_id'] = surveyModel.landTalukaID?? "";
+request.fields['land_taluka_name'] =surveyModel.landTaluka?? "";
+
+request.fields['land_village_id'] = surveyModel.landVillageID?? "";
+request.fields['land_village_name'] = surveyModel.landVillage?? "";
+
+request.fields['land_latitude'] = surveyModel.landLatitude.toString()?? "";
+request.fields['land_longitude'] = surveyModel.landLongitude.toString()?? "";
+
+request.fields['land_area_in_acres'] =surveyModel.landAreaInAcres?? "";
+request.fields['land_type'] = "2";//surveyModel.landType?? "";
+request.fields['land_rate_commercial_escalation'] = "2";// surveyModel.landRateCommercialEscalation?? "";
+
+request.fields['sub_station_name'] = surveyModel.subStationName?? "";
+
+request.fields['sub_station_district_id'] = surveyModel.substationDistrictID?? "";
+request.fields['sub_station_district_name'] = surveyModel.subStationDistrict?? "";
+
+request.fields['sub_station_taluka_id'] = surveyModel.substationTalukaID ?? "";
+request.fields['sub_station_taluka_name'] =   surveyModel.subStationTaluka?? "";
+
+request.fields['sub_station_village_id'] =surveyModel.substationVillageID?? "";
+request.fields['sub_station_village_name'] = surveyModel.subStationVillage?? "";
+
+request.fields['sub_station_latitude'] = surveyModel.subStationLatitude.toString() ?? "";
+request.fields['sub_station_longitude'] =surveyModel.subStationLongitude.toString() ?? "";
+
+request.fields['sub_station_incharge_contact'] = surveyModel.subStationInchargeContact?? "";
+request.fields['sub_station_incharge_name'] =surveyModel.inchargeName?? "";
+
+request.fields['operator_name'] =surveyModel.operatorName?? "";
+request.fields['operator_contact'] = surveyModel.operatorContact?? "";
+
+request.fields['sub_station_voltage_level'] =surveyModel.subStationVoltageLevel?? "";
+request.fields['sub_station_capacity'] = surveyModel.subStationCapacity?? "";
+
+request.fields['distance_sub_station_to_land'] = surveyModel.distanceSubStationToLand?? "";
+request.fields['plot_distance_from_main_road'] = surveyModel.plotDistanceFromMainRoad?? "";
+
+request.fields['evacuation_level'] = surveyModel.evacuationLevel?? "";
+request.fields['soil_type'] = surveyModel.soilType?? "";
+request.fields['wind_zone'] = surveyModel.windZone?? "";
+request.fields['ground_water_rainfall'] = surveyModel.groundWaterRainFall?? "";
+
+request.fields['nearest_highway'] =surveyModel.nearestHighway?? "";
+
+request.fields['consent_available'] =surveyModel.consentAvailable.toString() ?? "";
+request.fields['is_sync'] = surveyModel.isSync.toString() ?? "";
+request.fields['is_survey_approved'] = surveyModel.isSurveyapproved.toString()?? "";
+
+request.fields['selected_language'] =surveyModel.selectedLanguage?? "";
+request.fields['survey_status'] = "0";//surveyModel.surveyStatus?? "";
+
+   print(request.fields);
+String? token = await SPManager().getAuthToken();
+  // Add the files to the request
+  for (var file in surveyModel.surveyForms!) {
+    var mimeType = lookupMimeType(file); // Get mime type based on file extension
+    var multipartFile = await http.MultipartFile.fromPath(
+      'survey_images', 
+      file, 
+      contentType: mimeType != null ? MediaType.parse(mimeType) : MediaType('application', 'octet-stream')
+    );
+    request.files.add(multipartFile);
+  }
+ for (var file in surveyModel.landPictures!) {
+    var mimeType = lookupMimeType(file!); // Get mime type based on file extension
+    var multipartFile = await http.MultipartFile.fromPath(
+      'other_images', 
+      file, 
+      contentType: mimeType != null ? MediaType.parse(mimeType) : MediaType('application', 'octet-stream')
+    );
+    request.files.add(multipartFile);
+  }
+  print(request.files);
+  
+   request.headers['Accept'] = 'application/json';
+    request.headers['Content-Type'] = 'application/json';
+  request.headers['Authorization'] = 'Bearer ${token}';
+  request.headers['Cookie'] = "connect.sid=s%3A2tdDJk7GtxkDgwdGLz5i-8Q3zrIf8Jab.Km0GWJSzt2vY96oF19B8CTleU%2F7HZstVOdCsfSgcMLM";
+
+  // Sending the request
+  var response = await request.send();
+  print('Post uploaded successfully');
+  // Handle the response
+  if (response.statusCode == 200) {
+    // Success
+  
+    var responseData = await response.stream.bytesToString();
+    print('Response: $responseData');
+    final jsonResponse = json.decode(responseData);
+
+// Now access the message
+   final message = jsonResponse['message']; // or whatever key your API uses
+
+ 
+  } else {
+    var responseData = await response.stream.bytesToString();
+    print('Response: $responseData');
+     print('Error: ${response.statusCode}');
+    // Failure
+    print('Error: ${response.statusCode}');
+  
+  }
+
+   final result =
+              await Navigator.of(routeGlobalKey.currentContext!).push(
+            createSlideFromBottomRoute(
+              Maintabscreen(),
+            ),
+          );
+
+}
+
 }

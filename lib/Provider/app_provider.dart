@@ -178,8 +178,8 @@ class AppProvider extends ChangeNotifier {
     return {
       "page": 1,
       "limit": 10,
-      "search": "Rampura",
-      "state_id": 8,
+      // "search": "Rampura",
+      // "state_id": 8,
       "include_media": true
     };
   }

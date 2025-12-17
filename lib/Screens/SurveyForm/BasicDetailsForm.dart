@@ -94,7 +94,7 @@ print(stateMaps.length);
           displayString: (item) => "${item['name']}",
           onChanged: (value) {
             print("Selected State: $value");
-            basicFormProvider.selectedLandDistrict = {
+            basicFormProvider.selectedLandState = {
               'id': "${value!['id']}",
               'name': "${value['name']}",
             };
@@ -141,7 +141,7 @@ print(stateMaps.length);
             print("Selected district_name: $value");
             basicFormProvider.selectedLandDistrict = {
               'id': "${value!['id']}",
-              'name': "${value!['district_name']}",
+              'district_name': "${value!['district_name']}",
             };
           },
         ),
@@ -184,7 +184,7 @@ print(talukaMaps.length);
             print("Selected Taluka: $value");
             basicFormProvider.selectedLandTaluka = {
               'id': "${value!['id']}",
-              'name': "${value!['taluka_name']}",
+              'taluka_name': "${value!['taluka_name']}",
             };
           },
         ),
@@ -220,7 +220,7 @@ print(rows.length);
   onChanged: (value) {
     basicFormProvider.selectedLandVillage = {
       'id': value!['id']!,
-      'name': value['village_name']!,
+      'village_name': value['village_name']!,
     };
   },
 ),
@@ -328,6 +328,7 @@ print(rows.length);
           onChange: (val) {},
           textEditingController: basicFormProvider.landRateontroller,
           autovalidateMode: AutovalidateMode.disabled,
+          textInputType: TextInputType.number,
           validator: basicFormProvider.validateState,
         ),
 

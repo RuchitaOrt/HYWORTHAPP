@@ -33,7 +33,7 @@ Future<void> pickImage(BasicFormProvider provider) async {
 
   void removeImage(int index,BasicFormProvider basicFormprovider) {
     setState(() {
-      basicFormprovider.mediaFiles[index] = null;
+      basicFormprovider.OtherLandmediaFiles[index] = null;
     });
   }
   @override
@@ -121,11 +121,11 @@ GestureDetector(
       child: Stack(
         children: [
           Positioned.fill(
-            child: basicFormProvider.mediaFile != null
+            child: basicFormProvider.surveyFormsmediaFile != null
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.file(
-                      basicFormProvider.mediaFile!,
+                      basicFormProvider.surveyFormsmediaFile!,
                       fit: BoxFit.cover,
                     ),
                   )
@@ -137,7 +137,7 @@ GestureDetector(
                     ),
                   ),
           ),
-          if (basicFormProvider.mediaFile != null)
+          if (basicFormProvider.surveyFormsmediaFile != null)
             Positioned(
               top: 8,
               right: 8,

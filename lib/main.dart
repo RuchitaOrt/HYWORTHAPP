@@ -26,15 +26,15 @@ WidgetsFlutterBinding.ensureInitialized();
  await   Utility().loadAPIConfig();
   
  // Initialize Workmanager
-//  await Workmanager().initialize(
-//     callbackDispatcher,
-//     isInDebugMode: true, // prints logs for debugging
-//   );
-//   await Workmanager().registerOneOffTask(
-//   "testTask",
-//   syncTask,
-//   initialDelay: Duration(seconds: 5), // triggers 5s after app start
-// );
+ await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true, // prints logs for debugging
+  );
+  await Workmanager().registerOneOffTask(
+  "testTask",
+  syncTask,
+  initialDelay: Duration(seconds: 5), // triggers 5s after app start
+);
 
 
   // await Workmanager().registerPeriodicTask(

@@ -17,6 +17,7 @@ import 'package:provider/provider.dart';
 
 enum API {
   signIn,
+  
   getList,
 
   getById,
@@ -70,7 +71,7 @@ class APIManager {
   String apiBaseURL() {
     return baseURL!;
   }
-
+ static String createLAndSurvey = "${baseURL!}/land-survey/create";
   Future<String> apiEndPoint(API api) async {
     var apiPathString = "";
 
@@ -78,9 +79,9 @@ class APIManager {
       case API.signIn:
         apiPathString = "/api/sign-in";
         break;
-      case API.landsurveycreate:
-        apiPathString = "/land-survey/create";
-        break;
+      // case API.landsurveycreate:
+      //   apiPathString = "/land-survey/create";
+      //   break;
       case API.getById:
         apiPathString = "/land-survey/getById";
         break;
@@ -441,7 +442,8 @@ class APIManager {
  headers = {
   "Accept": "application/json",
   "Content-Type": "application/json",
-  "Cookie":"connect.sid=s%3AgSI19efiEnYhjoolijN26m12riYa2eKZ.S2qS3TfezzGEqC4DGygygzYb0266Ww9ghvFr%2B07ZAnk",
+  "Cookie":"connect.sid=s%3A2tdDJk7GtxkDgwdGLz5i-8Q3zrIf8Jab.Km0GWJSzt2vY96oF19B8CTleU%2F7HZstVOdCsfSgcMLM",
+  // "connect.sid=s%3AgSI19efiEnYhjoolijN26m12riYa2eKZ.S2qS3TfezzGEqC4DGygygzYb0266Ww9ghvFr%2B07ZAnk",
   // "Authorization": token!,
   // "x-access-token":"$token"
     "Authorization":"Bearer $token"

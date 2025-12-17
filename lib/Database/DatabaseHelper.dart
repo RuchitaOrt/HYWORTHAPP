@@ -96,6 +96,18 @@ class DatabaseHelper {
         substationVillageID TEXT
       )
     ''');
+ await db.execute('''
+  CREATE TABLE survey_media (
+  local_id TEXT PRIMARY KEY,
+  survey_local_id INTEGER,      -- surveys.id (FK)
+  server_media_id TEXT,         -- returned by server
+  media_type TEXT,              -- land / survey / consent
+  local_path TEXT,              -- file path OR url
+  is_synced INTEGER,            -- 0 / 1
+  is_deleted INTEGER,           -- 0 / 1
+  created_at INTEGER
+)
+''');
 
     await db.execute('''
       CREATE TABLE district(

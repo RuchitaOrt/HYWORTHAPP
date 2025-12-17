@@ -46,7 +46,7 @@ class _MediaFormState extends State<MediaForm> {
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: basicFormProvider.mediaFiles.length,
+          itemCount: basicFormProvider.OtherLandmediaFiles.length,
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             mainAxisSpacing: 12,
@@ -69,7 +69,7 @@ class _MediaFormState extends State<MediaForm> {
                   child: DottedBorder(
                     borderType: BorderType.RRect,
                     radius: const Radius.circular(8),
-                    color: basicFormProvider.mediaFiles[index] != null
+                    color: basicFormProvider.OtherLandmediaFiles[index] != null
                         ? CommonColors.white
                         : CommonColors.blue.withOpacity(0.5),
                     strokeWidth: 1,
@@ -82,11 +82,11 @@ class _MediaFormState extends State<MediaForm> {
                       child: Stack(
                         children: [
                           Positioned.fill(
-                            child: basicFormProvider.mediaFiles[index] != null
+                            child: basicFormProvider.OtherLandmediaFiles[index] != null
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.file(
-                                      basicFormProvider.mediaFiles[index]!,
+                                      basicFormProvider.OtherLandmediaFiles[index]!,
                                       fit: BoxFit.cover,
                                     ),
                                   )
@@ -98,7 +98,7 @@ class _MediaFormState extends State<MediaForm> {
                                     ),
                                   ),
                           ),
-                          if (basicFormProvider.mediaFiles[index] != null)
+                          if (basicFormProvider.OtherLandmediaFiles[index] != null)
                             Positioned(
                               top: 8,
                               right: 8,
@@ -161,7 +161,7 @@ class _MediaFormState extends State<MediaForm> {
 //     final picked = await picker.pickImage(source: ImageSource.gallery);
 //     if (picked != null) {
 //       // setState(() {
-//       //   basicFormProvider.mediaFiles[index] = File(picked.path);
+//       //   basicFormProvider.OtherLandmediaFiles[index] = File(picked.path);
 //       // });
 //       basicFormProvider.setMediaFile(index, File(picked.path));
 //     }
@@ -169,7 +169,7 @@ class _MediaFormState extends State<MediaForm> {
 
 //   void removeImage(int index, BasicFormProvider basicFormProvider) {
 //     // setState(() {
-//     //   basicFormProvider.mediaFiles[index] = null;
+//     //   basicFormProvider.OtherLandmediaFiles[index] = null;
 //     // });
 //     basicFormProvider.removeMediaFile(index);
 //   }
@@ -185,7 +185,7 @@ class _MediaFormState extends State<MediaForm> {
 //         GridView.builder(
 //           shrinkWrap: true,
 //           physics: const NeverScrollableScrollPhysics(),
-//           itemCount: basicFormProvider.mediaFiles.length,
+//           itemCount: basicFormProvider.OtherLandmediaFiles.length,
 //           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
 //             crossAxisCount: 2,
 //             mainAxisSpacing: 12,
@@ -206,7 +206,7 @@ class _MediaFormState extends State<MediaForm> {
 //                   child: DottedBorder(
 //                     borderType: BorderType.RRect,
 //                     radius: const Radius.circular(8),
-//                     color: basicFormProvider.mediaFiles[index] != null
+//                     color: basicFormProvider.OtherLandmediaFiles[index] != null
 //                         ? CommonColors.white
 //                         : CommonColors.blue.withOpacity(0.5),
 //                     strokeWidth: 1,
@@ -219,11 +219,11 @@ class _MediaFormState extends State<MediaForm> {
 //                       child: Stack(
 //                         children: [
 //                           Positioned.fill(
-//                             child: basicFormProvider.mediaFiles[index] != null
+//                             child: basicFormProvider.OtherLandmediaFiles[index] != null
 //                                 ? ClipRRect(
 //                                     borderRadius: BorderRadius.circular(8),
 //                                     child: Image.file(
-//                                       basicFormProvider.mediaFiles[index]!,
+//                                       basicFormProvider.OtherLandmediaFiles[index]!,
 //                                       fit: BoxFit.cover,
 //                                     ),
 //                                   )
@@ -235,7 +235,7 @@ class _MediaFormState extends State<MediaForm> {
 //                                     ),
 //                                   ),
 //                           ),
-//                           if (basicFormProvider.mediaFiles[index] != null)
+//                           if (basicFormProvider.OtherLandmediaFiles[index] != null)
 //                             Positioned(
 //                               top: 8,
 //                               right: 8,
