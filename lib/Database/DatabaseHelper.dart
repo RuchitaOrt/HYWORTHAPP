@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:hyworth_land_survey/Utils/GlobalLists.dart';
 import 'package:hyworth_land_survey/model/LandDistrictModel.dart';
 import 'package:hyworth_land_survey/model/LandStateModel.dart';
@@ -36,6 +37,8 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.rawQuery(sql, args);
   }
+
+
 
   Future _createDB(Database db, int version) async {
     // await db.execute('DROP TABLE IF EXISTS surveys');
@@ -79,6 +82,7 @@ class DatabaseHelper {
         nearestHighway TEXT,
         consentAvailable INTEGER,
         isSync INTEGER,
+        serverSynced INTEGER,
         isSurveyapproved INTEGER,
         selectedLanguage TEXT,
         landPictures TEXT,  -- stored as JSON string
@@ -96,13 +100,15 @@ class DatabaseHelper {
         substationVillageID TEXT
       )
     ''');
- await db.execute('''
+
+
+    await db.execute('''
   CREATE TABLE survey_media (
-  local_id TEXT PRIMARY KEY,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   survey_local_id INTEGER,      -- surveys.id (FK)
   server_media_id TEXT,         -- returned by server
-  media_type TEXT,              -- land / survey / consent
-  local_path TEXT,              -- file path OR url
+  media_type TEXT,              -- land | survey | consent
+  local_path TEXT,              -- file path OR server url
   is_synced INTEGER,            -- 0 / 1
   is_deleted INTEGER,           -- 0 / 1
   created_at INTEGER
@@ -161,42 +167,72 @@ class DatabaseHelper {
 );
 ''');
 
-    // Insert static Districts
-    // await db.insert('district', {'id': '1', 'name': 'Mumbai'});
-    // await db.insert('district', {'id': '2', 'name': 'Pune'});
-    // await db.insert('district', {'id': '3', 'name': 'Nagpur'});
-    // await db.insert('district', {'id': '4', 'name': 'Nashik'});
-    // await db.insert('district', {'id': '5', 'name': 'Thane'});
-    // await db.insert('district', {'id': '6', 'name': 'Kolhapur'});
-    // await db.insert('district', {'id': '7', 'name': 'Aurangabad'});
-    // await db.insert('district', {'id': '8', 'name': 'Solapur'});
-    // await db.insert('district', {'id': '9', 'name': 'Satara'});
-    // await db.insert('district', {'id': '10', 'name': 'Jalgaon'});
-
-    // Insert static Talukas (10 entries)
-    // await db.insert('taluka', {'id': '1', 'name': 'Andheri'});
-    // await db.insert('taluka', {'id': '2', 'name': 'Bandra'});
-    // await db.insert('taluka', {'id': '3', 'name': 'Haveli'});
-    // await db.insert('taluka', {'id': '4', 'name': 'Mulshi'});
-    // await db.insert('taluka', {'id': '5', 'name': 'Nagpur Rural'});
-    // await db.insert('taluka', {'id': '6', 'name': 'Nashik East'});
-    // await db.insert('taluka', {'id': '7', 'name': 'Thane West'});
-    // await db.insert('taluka', {'id': '8', 'name': 'Kolhapur North'});
-    // await db.insert('taluka', {'id': '9', 'name': 'Aurangabad Central'});
-    // await db.insert('taluka', {'id': '10', 'name': 'Solapur South'});
-
-    // // Insert static Villages (10 entries)
-    // await db.insert('village', {'id': '1', 'name': 'Village A'});
-    // await db.insert('village', {'id': '2', 'name': 'Village B'});
-    // await db.insert('village', {'id': '3', 'name': 'Village C'});
-    // await db.insert('village', {'id': '4', 'name': 'Village D'});
-    // await db.insert('village', {'id': '5', 'name': 'Village E'});
-    // await db.insert('village', {'id': '6', 'name': 'Village F'});
-    // await db.insert('village', {'id': '7', 'name': 'Village G'});
-    // await db.insert('village', {'id': '8', 'name': 'Village H'});
-    // await db.insert('village', {'id': '9', 'name': 'Village I'});
-    // await db.insert('village', {'id': '10', 'name': 'Village J'});
   }
+Future<void> insertSurveyMedia({
+  required int surveyLocalId,
+  required String file,
+  required String mediaType,
+}) async {
+  final db = await database;
+
+  await db.insert('survey_media', {
+    'survey_local_id': surveyLocalId,
+    'server_media_id': null,
+    'media_type': mediaType, // land / survey / consent
+    'local_path': file,
+    'is_synced': 0,
+    'is_deleted': 0,
+    'created_at': DateTime.now().millisecondsSinceEpoch,
+  });
+}
+Future<void> insertSurveyMediaList({
+  required int surveyLocalId,
+  List<File> landPictures = const [],
+  List<File> surveyForms = const [],
+  List<File> consentForms = const [],
+}) async {
+  final db = await database;
+  final batch = db.batch();
+
+  void addMedia(List<File> files, String type) {
+    for (final file in files) {
+      batch.insert('survey_media', {
+        'survey_local_id': surveyLocalId,
+        'server_media_id': null,
+        'media_type': type,
+        'local_path': file.path,
+        'is_synced': 0,
+        'is_deleted': 0,
+        'created_at': DateTime.now().millisecondsSinceEpoch,
+      });
+    }
+  }
+
+  addMedia(landPictures, 'land');
+  addMedia(surveyForms, 'survey');
+  addMedia(consentForms, 'consent');
+
+  await batch.commit(noResult: true);
+}
+Future<int> updateSurveySyncFlags({
+  required String surveyId,
+  required int syncStatus,
+  required int serverSynced,
+  required String surveyStatus,
+}) async {
+  final db = await database;
+print("RUCHITA UPDATED updateSurveySyncFlags IN LOCAL DB");
+  return await db.update(
+    'surveys',
+    {
+      'isSync': syncStatus,
+      'serverSynced': serverSynced,
+      'surveyStatus': surveyStatus,
+    },
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+  );
+}
   Future<void> clearTableSurvey() async {
     final db = await database;
     await db.delete('surveys');
@@ -243,6 +279,19 @@ class DatabaseHelper {
 
     await batch.commit(noResult: true);
   }
+Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
+    int surveyLocalId) async {
+  final db = await database;
+
+  final List<Map<String, dynamic>> maps = await db.query(
+    'survey_media',
+    where: 'survey_local_id = ?',
+    whereArgs: [surveyLocalId],
+    orderBy: 'id ASC',
+  );
+
+  return maps.map((e) => SurveyMediaModel.fromMap(e)).toList();
+}
 
   Future<void> insertTaluka(List<TalukaData> list) async {
     final db = await database;
@@ -359,8 +408,21 @@ class DatabaseHelper {
   Future<int> insertSurvey(SurveyModel survey) async {
     print("INSERTED SURVEY");
     final db = await instance.database;
-    return await db.insert('surveys', survey.toJsonDB());
+    return await db.insert('surveys', survey.toJsonDB(), conflictAlgorithm: ConflictAlgorithm.replace,);
   }
+Future<bool> surveyExists(String surveyId) async {
+  final db = await database;
+
+  final result = await db.query(
+    'surveys',
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+    limit: 1,
+  );
+
+  return result.isNotEmpty;
+}
+
 
 //update
   Future<int> updateSurvey(SurveyModel survey, int surveyID) async {

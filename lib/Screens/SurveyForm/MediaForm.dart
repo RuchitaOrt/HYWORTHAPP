@@ -43,84 +43,89 @@ class _MediaFormState extends State<MediaForm> {
           style: CommonStyles.tsblackHeading,
         ),
         SizedBox(height: SizeConfig.blockSizeVertical * 0.5),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: basicFormProvider.OtherLandmediaFiles.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.85,
+       GridView.builder(
+  shrinkWrap: true,
+  physics: const NeverScrollableScrollPhysics(),
+  itemCount: 7,
+  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 2,
+    mainAxisSpacing: 12,
+    crossAxisSpacing: 12,
+    childAspectRatio: 0.85,
+  ),
+  itemBuilder: (context, index) {
+    final file = index < basicFormProvider.OtherLandmediaFiles.length
+        ? basicFormProvider.OtherLandmediaFiles[index]
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: TextWithAsterisk(
+            text: "${t(context, "land_images")} ${index + 1}",
+            isAstrick: true,
           ),
-          itemBuilder: (context, index) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 6),
-                  child: TextWithAsterisk(
-                    text: "${t(context, "land_images")} ${index + 1}",
-                    isAstrick: true,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () => pickImage(index, basicFormProvider),
-                  child: DottedBorder(
-                    borderType: BorderType.RRect,
-                    radius: const Radius.circular(8),
-                    color: basicFormProvider.OtherLandmediaFiles[index] != null
-                        ? CommonColors.white
-                        : CommonColors.blue.withOpacity(0.5),
-                    strokeWidth: 1,
-                    dashPattern: [8, 2],
-                    child: Container(
-                      height: 160,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned.fill(
-                            child: basicFormProvider.OtherLandmediaFiles[index] != null
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Image.file(
-                                      basicFormProvider.OtherLandmediaFiles[index]!,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Center(
-                                    child: Icon(
-                                      Icons.camera_alt_outlined,
-                                      color: CommonColors.blue,
-                                      size: 30,
-                                    ),
-                                  ),
-                          ),
-                          if (basicFormProvider.OtherLandmediaFiles[index] != null)
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: GestureDetector(
-                                onTap: () => removeImage(index, basicFormProvider),
-                                child: const CircleAvatar(
-                                  backgroundColor: CommonColors.grey75,
-                                  radius: 12,
-                                  child: Icon(Icons.close,
-                                      color: Colors.white, size: 14),
-                                ),
-                              ),
+        ),
+        GestureDetector(
+          onTap: () => pickImage(index, basicFormProvider),
+          child: DottedBorder(
+            borderType: BorderType.RRect,
+            radius: const Radius.circular(8),
+            color: file != null
+                ? CommonColors.white
+                : CommonColors.blue.withOpacity(0.5),
+            strokeWidth: 1,
+            dashPattern: [8, 2],
+            child: Container(
+              height: 160,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: file != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              file,
+                              fit: BoxFit.cover,
                             ),
-                        ],
+                          )
+                        : Center(
+                            child: Icon(
+                              Icons.camera_alt_outlined,
+                              color: CommonColors.blue,
+                              size: 30,
+                            ),
+                          ),
+                  ),
+                  if (file != null)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: () => removeImage(index, basicFormProvider),
+                        child: const CircleAvatar(
+                          backgroundColor: CommonColors.grey75,
+                          radius: 12,
+                          child: Icon(Icons.close,
+                              color: Colors.white, size: 14),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            );
-          },
+                ],
+              ),
+            ),
+          ),
         ),
+      ],
+    );
+  },
+),
+
       ],
     );
   }
@@ -161,7 +166,7 @@ class _MediaFormState extends State<MediaForm> {
 //     final picked = await picker.pickImage(source: ImageSource.gallery);
 //     if (picked != null) {
 //       // setState(() {
-//       //   basicFormProvider.OtherLandmediaFiles[index] = File(picked.path);
+//       //   basicFormProvider.mediaFiles[index] = File(picked.path);
 //       // });
 //       basicFormProvider.setMediaFile(index, File(picked.path));
 //     }
@@ -169,7 +174,7 @@ class _MediaFormState extends State<MediaForm> {
 
 //   void removeImage(int index, BasicFormProvider basicFormProvider) {
 //     // setState(() {
-//     //   basicFormProvider.OtherLandmediaFiles[index] = null;
+//     //   basicFormProvider.mediaFiles[index] = null;
 //     // });
 //     basicFormProvider.removeMediaFile(index);
 //   }
@@ -185,7 +190,7 @@ class _MediaFormState extends State<MediaForm> {
 //         GridView.builder(
 //           shrinkWrap: true,
 //           physics: const NeverScrollableScrollPhysics(),
-//           itemCount: basicFormProvider.OtherLandmediaFiles.length,
+//           itemCount: basicFormProvider.mediaFiles.length,
 //           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
 //             crossAxisCount: 2,
 //             mainAxisSpacing: 12,
@@ -206,7 +211,7 @@ class _MediaFormState extends State<MediaForm> {
 //                   child: DottedBorder(
 //                     borderType: BorderType.RRect,
 //                     radius: const Radius.circular(8),
-//                     color: basicFormProvider.OtherLandmediaFiles[index] != null
+//                     color: basicFormProvider.mediaFiles[index] != null
 //                         ? CommonColors.white
 //                         : CommonColors.blue.withOpacity(0.5),
 //                     strokeWidth: 1,
@@ -219,11 +224,11 @@ class _MediaFormState extends State<MediaForm> {
 //                       child: Stack(
 //                         children: [
 //                           Positioned.fill(
-//                             child: basicFormProvider.OtherLandmediaFiles[index] != null
+//                             child: basicFormProvider.mediaFiles[index] != null
 //                                 ? ClipRRect(
 //                                     borderRadius: BorderRadius.circular(8),
 //                                     child: Image.file(
-//                                       basicFormProvider.OtherLandmediaFiles[index]!,
+//                                       basicFormProvider.mediaFiles[index]!,
 //                                       fit: BoxFit.cover,
 //                                     ),
 //                                   )
@@ -235,7 +240,7 @@ class _MediaFormState extends State<MediaForm> {
 //                                     ),
 //                                   ),
 //                           ),
-//                           if (basicFormProvider.OtherLandmediaFiles[index] != null)
+//                           if (basicFormProvider.mediaFiles[index] != null)
 //                             Positioned(
 //                               top: 8,
 //                               right: 8,

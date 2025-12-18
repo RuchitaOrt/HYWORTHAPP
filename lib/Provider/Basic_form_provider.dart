@@ -10,6 +10,7 @@ import 'package:hyworth_land_survey/main.dart';
 
 import 'package:hyworth_land_survey/model/LandDistrictModel.dart';
 import 'package:hyworth_land_survey/model/LandStateModel.dart';
+import 'package:hyworth_land_survey/model/LandSurveyCreatedModel.dart';
 import 'package:hyworth_land_survey/model/LandTalukaModel.dart';
 import 'package:hyworth_land_survey/model/LandVillagesModel.dart';
 import 'package:http/http.dart' as http;
@@ -20,6 +21,7 @@ import 'package:hyworth_land_survey/widgets/createSlideFromLeftRoute.dart';
 import 'package:mime/mime.dart';
 
 class BasicFormProvider extends ChangeNotifier {
+  
   TextEditingController solarCapacityController = TextEditingController();
   TextEditingController gridConnectivityController = TextEditingController();
   // TextEditingController landStateController = TextEditingController();
@@ -146,10 +148,18 @@ class BasicFormProvider extends ChangeNotifier {
     return OtherLandmediaFiles.every((file) => file != null);
   }
 
-  void setMediaFile(int index, File file) {
-    OtherLandmediaFiles[index] = file;
-    notifyListeners();
+  // void setMediaFile(int index, File file) {
+  //   OtherLandmediaFiles[index] = file;
+  //   notifyListeners();
+  // }
+void setMediaFile(int index, File file) {
+  if (index >= OtherLandmediaFiles.length) {
+    // extend the list if needed (optional, here not needed since always 7)
+    OtherLandmediaFiles.length = index + 1;
   }
+  OtherLandmediaFiles[index] = file;
+  notifyListeners();
+}
 
   void removeMediaFile(int index) {
     OtherLandmediaFiles[index] = null;
@@ -342,7 +352,7 @@ request.fields['land_longitude'] = surveyModel.landLongitude.toString()?? "";
 
 request.fields['land_area_in_acres'] =surveyModel.landAreaInAcres?? "";
 request.fields['land_type'] = "2";//surveyModel.landType?? "";
-request.fields['land_rate_commercial_escalation'] = "2";// surveyModel.landRateCommercialEscalation?? "";
+request.fields['land_rate_commercial_escalation'] = surveyModel.landRateCommercialEscalation?? "";
 
 request.fields['sub_station_name'] = surveyModel.subStationName?? "";
 
@@ -388,19 +398,19 @@ request.fields['survey_status'] = "0";//surveyModel.surveyStatus?? "";
 String? token = await SPManager().getAuthToken();
   // Add the files to the request
   for (var file in surveyModel.surveyForms!) {
-    var mimeType = lookupMimeType(file); // Get mime type based on file extension
+    var mimeType = lookupMimeType(file.localPath); // Get mime type based on file extension
     var multipartFile = await http.MultipartFile.fromPath(
       'survey_images', 
-      file, 
+      file.localPath, 
       contentType: mimeType != null ? MediaType.parse(mimeType) : MediaType('application', 'octet-stream')
     );
     request.files.add(multipartFile);
   }
  for (var file in surveyModel.landPictures!) {
-    var mimeType = lookupMimeType(file!); // Get mime type based on file extension
+    var mimeType = lookupMimeType(file.localPath!); // Get mime type based on file extension
     var multipartFile = await http.MultipartFile.fromPath(
       'other_images', 
-      file, 
+      file.localPath, 
       contentType: mimeType != null ? MediaType.parse(mimeType) : MediaType('application', 'octet-stream')
     );
     request.files.add(multipartFile);
@@ -416,17 +426,25 @@ String? token = await SPManager().getAuthToken();
   var response = await request.send();
   print('Post uploaded successfully');
   // Handle the response
-  if (response.statusCode == 200) {
+  if (response.statusCode == 200 || response.statusCode == 201) {
     // Success
   
     var responseData = await response.stream.bytesToString();
     print('Response: $responseData');
     final jsonResponse = json.decode(responseData);
-
+final apiResponse = LandSurveyCreatedModel.fromJson(jsonResponse);
 // Now access the message
    final message = jsonResponse['message']; // or whatever key your API uses
+     print("RUCHITA CREATED LIST IN SERVER");
+   print(apiResponse.data!.surveyId!);
 
- 
+await DatabaseHelper.instance.updateSurveySyncFlags(
+  surveyId: apiResponse.data!.surveyId!,
+  syncStatus: apiResponse.data!.isSync!,        // update pending
+  serverSynced: 1,
+  surveyStatus: apiResponse.data!.surveyStatus.toString(),
+);
+
   } else {
     var responseData = await response.stream.bytesToString();
     print('Response: $responseData');

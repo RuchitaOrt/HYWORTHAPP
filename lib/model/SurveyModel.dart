@@ -41,9 +41,15 @@ class SurveyModel {
   final int?
       isSurveyapproved; //means that is sync with admin and not in awaited confirmation
   final int? isSync;
-  final List<String>? landPictures;
-  final List<String>? surveyForms;
-  final List<String>? consentForms;
+  final int? serverSynced;
+  // final List<String>? landPictures;
+  // final List<String>? surveyForms;
+  // final List<String>? consentForms;
+
+  final List<SurveyMediaModel> landPictures;
+  final List<SurveyMediaModel> surveyForms;
+  final List<SurveyMediaModel> consentForms;
+
   final String? selectedLanguage;
   final int? surveyDate;
   final int? updatedsurveyDate;
@@ -96,11 +102,15 @@ class SurveyModel {
     this.nearestHighway,
     this.consentAvailable,
     this.isSurveyapproved,
-    this.landPictures,
-    this.surveyForms,
+    this.serverSynced,
+     required this.landPictures,
+    required this.surveyForms,
+    required this.consentForms,
+    // this.landPictures,
+    // this.surveyForms,
     this.isSync,
     this.selectedLanguage,
-    this.consentForms,
+    // this.consentForms,
     this.surveyDate,
     this.updatedsurveyDate,
     this.surveyStatus,
@@ -154,6 +164,7 @@ class SurveyModel {
         "consentAvailable": consentAvailable,
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
+        "serverSynced":serverSynced,
         "landPictures": landPictures,
         "surveyForms": surveyForms,
         "selectedLanguage": selectedLanguage,
@@ -172,7 +183,7 @@ class SurveyModel {
 
   /// Convert to DB (store lists as JSON string)
   Map<String, dynamic> toJsonDB() => {
-        "id": id,
+        // "id": id,
         "surveyId": surveyId,
         "userId": userId,
         "solarParkACCapacity": solarParkACCapacity,
@@ -211,12 +222,25 @@ class SurveyModel {
         "consentAvailable": consentAvailable,
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
-        "landPictures": jsonEncode(landPictures ?? []),
-        "surveyForms": jsonEncode(surveyForms ?? []),
+        "serverSynced":serverSynced,
+        'landPictures': jsonEncode(
+  landPictures.map((e) => e.localPath).toList(),
+),
+
+'surveyForms': jsonEncode(
+  surveyForms.map((e) => e.localPath).toList(),
+),
+
+'consentForms': jsonEncode(
+  consentForms.map((e) => e.localPath).toList(),
+),
+
+        // "landPictures": jsonEncode(landPictures ?? []),
+        // "surveyForms": jsonEncode(surveyForms ?? []),
         "selectedLanguage": selectedLanguage,
-        "consentForms": jsonEncode(
-          consentForms ?? [],
-        ),
+        // "consentForms": jsonEncode(
+        //   consentForms ?? [],
+        // ),
         "surveyDate": surveyDate,
         "updatedsurveyDate": updatedsurveyDate,
         "surveyStatus": surveyStatus,
@@ -268,11 +292,46 @@ class SurveyModel {
       nearestHighway: json["nearestHighway"],
       consentAvailable: json["consentAvailable"],
       isSync: json["isSync"],
+      serverSynced:json["serverSynced"],
       isSurveyapproved: json["isSurveyapproved"],
-      landPictures: List<String>.from(jsonDecode(json["landPictures"] ?? '[]')),
-      surveyForms: List<String>.from(jsonDecode(json["surveyForms"] ?? '[]')),
+      // landPictures: List<SurveyMediaModel>.from(jsonDecode(json["landPictures"] ?? '[]')),
+      // surveyForms: List<SurveyMediaModel>.from(jsonDecode(json["surveyForms"] ?? '[]')),
+      // consentForms: List<SurveyMediaModel>.from(jsonDecode(json["consentForms"] ?? '[]')),
+      landPictures: (json['landPictures'] != null)
+    ? (jsonDecode(json['landPictures']) as List)
+        .map((path) => SurveyMediaModel(
+              surveyLocalId: json['id'],
+              mediaType: MediaTypeValue.landPicture,
+              localPath: path,
+              isSynced: 1,
+            ))
+        .toList()
+    : [],
+
+surveyForms: (json['surveyForms'] != null)
+    ? (jsonDecode(json['surveyForms']) as List)
+        .map((path) => SurveyMediaModel(
+              surveyLocalId: json['id'],
+              mediaType: MediaTypeValue.surveyForm,
+              localPath: path,
+              isSynced: 1,
+            ))
+        .toList()
+    : [],
+
+consentForms: (json['consentForms'] != null)
+    ? (jsonDecode(json['consentForms']) as List)
+        .map((path) => SurveyMediaModel(
+              surveyLocalId: json['id'],
+              mediaType: MediaTypeValue.consentForm,
+              localPath: path,
+              isSynced: 1,
+            ))
+        .toList()
+    : [],
+
       selectedLanguage: json['selectedLanguage'],
-      consentForms: List<String>.from(jsonDecode(json["consentForms"] ?? '[]')),
+      
       surveyDate: json['surveyDate'],
       updatedsurveyDate: json['updatedsurveyDate'],
       surveyStatus: json["surveyStatus"] ?? "",
@@ -284,42 +343,62 @@ class SurveyModel {
       landStateID:json['landStateID'],
       substationVillageID: json['substationVillageID']);
 }
-class SurveyDetailVM {
-  final SurveyModel survey;
-  final List<SurveyMediaModel> landPictures;
-  final List<SurveyMediaModel> surveyForms;
-  final List<SurveyMediaModel> consentForms;
+// class SurveyDetailVM {
+//   final SurveyModel survey;
+//   final List<SurveyMediaModel> landPictures;
+//   final List<SurveyMediaModel> surveyForms;
+//   final List<SurveyMediaModel> consentForms;
 
-  SurveyDetailVM({
-    required this.survey,
-    required this.landPictures,
-    required this.surveyForms,
-    required this.consentForms,
-  });
-}
+//   SurveyDetailVM({
+//     required this.survey,
+//     required this.landPictures,
+//     required this.surveyForms,
+//     required this.consentForms,
+//   });
+// }
 class SurveyMediaModel {
-  final String localId;
+  final int? id;
   final int surveyLocalId;
-  final String? serverMediaId;
-  final MediaTypeValue mediaType;
-  final String path;
-  final bool isSynced;
-  final bool isDeleted;
-  final int createdAt;
+  final String mediaType;
+  final String localPath;
+  final String? serverId;
+  final int isSynced;
 
   SurveyMediaModel({
-    required this.localId,
+    this.id,
     required this.surveyLocalId,
-    this.serverMediaId,
     required this.mediaType,
-    required this.path,
-    required this.isSynced,
-    required this.isDeleted,
-    required this.createdAt,
+    required this.localPath,
+    this.serverId,
+    required this.isSynced, 
   });
+
+  factory SurveyMediaModel.fromMap(Map<String, dynamic> map) {
+    return SurveyMediaModel(
+      id: map['id'],
+      surveyLocalId: map['survey_local_id'],
+      mediaType: map['media_type'],
+      localPath: map['local_path'],
+      serverId: map['server_id'],
+      isSynced: map['is_synced'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'survey_local_id': surveyLocalId,
+      'media_type': mediaType,
+      'local_path': localPath,
+      'server_id': serverId,
+      'is_synced': isSynced,
+    };
+  }
+  
 }
-enum MediaTypeValue {
-  landPicture,
-  surveyForm,
-  consentForm,
+
+class MediaTypeValue {
+  static const landPicture = 'LAND_PICTURE';
+  static const surveyForm = 'SURVEY_FORM';
+  static const consentForm = 'CONSENT_FORM';
 }

@@ -73,6 +73,12 @@ Future<bool> showConfirmDialog(BuildContext context,
                              
                                   shape: RoundedRectangleBorder(
                                     borderRadius: new BorderRadius.circular(15.0)) ),
+                        // onPressed: onyes,
+                        onPressed: () async {
+  await onyes();                 // do your work
+  Navigator.of(context).pop(true); 
+},
+
                         // shape: new RoundedRectangleBorder(
                         //     borderRadius: new BorderRadius.circular(15.0)),
                         // color: Colors.white,
@@ -83,7 +89,6 @@ Future<bool> showConfirmDialog(BuildContext context,
                             fontSize: 14.0,
                           ),
                         ),
-                        onPressed: onyes,
                       ),
                     ),
                     // ignore: deprecated_member_use

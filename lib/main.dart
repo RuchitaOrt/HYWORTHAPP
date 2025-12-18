@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
 
 import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Provider/app_provider.dart';
@@ -26,15 +27,15 @@ WidgetsFlutterBinding.ensureInitialized();
  await   Utility().loadAPIConfig();
   
  // Initialize Workmanager
- await Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: true, // prints logs for debugging
-  );
-  await Workmanager().registerOneOffTask(
-  "testTask",
-  syncTask,
-  initialDelay: Duration(seconds: 5), // triggers 5s after app start
-);
+//  await Workmanager().initialize(
+//     callbackDispatcher,
+//     isInDebugMode: true, // prints logs for debugging
+//   );
+//   await Workmanager().registerOneOffTask(
+//   "testTask",
+//   syncTask,
+//   initialDelay: Duration(seconds: 5), // triggers 5s after app start
+// );
 
 
   // await Workmanager().registerPeriodicTask(

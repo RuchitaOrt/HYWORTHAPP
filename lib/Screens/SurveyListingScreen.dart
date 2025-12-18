@@ -244,7 +244,7 @@ switch (_currentFilter) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: SurveyCard(
-                        surveyListing: filtered,
+                        surveyListing:filtered,//17dec
                         index: index,
                         status: survey.surveyStatus ?? "",
                         uploadconsent: false,

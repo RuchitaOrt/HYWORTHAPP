@@ -1,21 +1,14 @@
-import 'dart:convert';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
 import 'package:hyworth_land_survey/Utils/APIManager.dart';
-import 'package:hyworth_land_survey/Utils/SPManager.dart';
 import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
 import 'package:hyworth_land_survey/Utils/internetConnection.dart';
 import 'package:hyworth_land_survey/main.dart';
-import 'package:hyworth_land_survey/model/LandDistrictModel.dart';
-import 'package:hyworth_land_survey/model/LandStateModel.dart';
+import 'package:hyworth_land_survey/model/DeleteLandSurveyModel.dart';
 import 'package:hyworth_land_survey/model/LandSurveyByIDModel.dart';
 import 'package:hyworth_land_survey/model/LandSuveryListModel.dart';
-import 'package:hyworth_land_survey/model/LandTalukaModel.dart';
-import 'package:hyworth_land_survey/model/LandVillagesModel.dart';
 import 'package:hyworth_land_survey/model/SurveyModel.dart';
-import 'package:provider/provider.dart';
 
 class AppProvider extends ChangeNotifier {
   AppProvider() {}
@@ -33,30 +26,6 @@ class AppProvider extends ChangeNotifier {
   List<SurveyModel> _completeSurveys = [];
 
   List<SurveyModel> get completeSurveys => _completeSurveys;
-  // final List<SurveyModel> staticSurveys = [
-  //   SurveyModel(
-  //     surveyId: "202509001",
-  //     landState: "Maharashtra",
-  //     landDistrict: "Mumbai",
-  //     landVillage: "Goa",
-  //     subStationCapacity: "10",
-  //     landAreaInAcres: "20",
-  //     subStationName: "Mame",
-  //     landType: "Soil",
-  //     landRateCommercialEscalation: "20",
-  //   ),
-  //   SurveyModel(
-  //     surveyId: "202509002",
-  //     landState: "Maharashtra",
-  //     subStationCapacity: "10",
-  //     landVillage: "Goa",
-  //     landDistrict: "Mumbai",
-  //     landAreaInAcres: "20",
-  //     subStationName: "Mame",
-  //     landType: "Soil",
-  //     landRateCommercialEscalation: "20",
-  //   ),
-  // ];
 
   Future<void> loadSPendingurveys() async {
     //  _surveys = staticSurveys;
@@ -93,7 +62,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> refreshDashboard() async {
     // fetch dashboard counts or reset state
-    
+
     notifyListeners();
   }
 
@@ -203,21 +172,53 @@ class AppProvider extends ChangeNotifier {
         final db = DatabaseHelper.instance;
 
         /// clear old data
-        await db.clearTableSurvey();
+        // await db.clearTableSurvey();
 
         for (var detail in resp.data!) {
           print("-----SURVEY LAND3____");
           // Collect survey_land_images URLs
-          List<String> landImages = (detail.surveyLandImages ?? [])
-              .map((e) => e.mediaUrl ?? "")
+          // List<String> landImages = (detail.surveyLandImages ?? [])
+          //     .map((e) => e.mediaUrl ?? "")
+          //     .toList();
+
+          // // Collect survey_other_details_images URLs
+          // List<String> otherImages = (detail.surveyOtherDetailsImages ?? [])
+          //     .map((e) => e.mediaUrl ?? "")
+          //     .toList();
+          // List<String> consentImages =
+          //     (detail.consents ?? []).map((e) => e.mediaUrl ?? "").toList();
+          // Land pictures
+// LAND IMAGES
+          List<SurveyMediaModel> landImages = (detail.surveyLandImages ?? [])
+              .map((media) => SurveyMediaModel(
+                    surveyLocalId: int.parse(detail.surveyId),
+                    mediaType: 'land',
+                    localPath: media.mediaUrl,
+                    isSynced: 1,
+                  ))
               .toList();
 
-          // Collect survey_other_details_images URLs
-          List<String> otherImages = (detail.surveyOtherDetailsImages ?? [])
-              .map((e) => e.mediaUrl ?? "")
+// SURVEY FORMS
+          List<SurveyMediaModel> otherImages =
+              (detail.surveyOtherDetailsImages ?? [])
+                  .map((media) => SurveyMediaModel(
+                        surveyLocalId: int.parse(detail.surveyId),
+                        mediaType: 'survey',
+                        localPath: media.mediaUrl,
+                        isSynced: 1,
+                      ))
+                  .toList();
+
+// CONSENT FORMS
+          List<SurveyMediaModel> consentImages = (detail.consents ?? [])
+              .map((media) => SurveyMediaModel(
+                    surveyLocalId: int.parse(detail.surveyId),
+                    mediaType: 'consent',
+                    localPath: media.mediaUrl,
+                    isSynced: 1,
+                  ))
               .toList();
-          List<String> consentImages =
-              (detail.consents ?? []).map((e) => e.mediaUrl ?? "").toList();
+
           print("-----SURVEY LAND4____");
 
           final survey = SurveyModel(
@@ -304,7 +305,15 @@ class AppProvider extends ChangeNotifier {
               //     detail.approvalStatus?.approvalStatusName ?? "Pending",
               );
 
-          await db.insertSurvey(survey);
+          final exists = await db.surveyExists(survey.surveyId!);
+
+          if (exists) {
+            await db.updateSurvey(survey, int.parse(survey.surveyId!));
+            debugPrint("🔁 Survey updated: ${survey.surveyId}");
+          } else {
+            await db.insertSurvey(survey);
+            debugPrint("➕ Survey inserted: ${survey.surveyId}");
+          }
 
           await db.getAllSurveys();
         }
@@ -322,15 +331,48 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Map<String, dynamic> createRequestfetchLandBYID() {
-    return {"land_survey_id": "LS-2025-00000009"};
+  Map<String, dynamic> createRequestfetchLandBYID(String surveyID) {
+    return {"land_survey_id":surveyID };
   }
-
-  fetchLandBYID() async {
+ deleteLandList(String surveyID) async {
     var status1 = await ConnectionDetector.checkInternetConnection();
 
     if (status1) {
-      dynamic jsonbody = createRequestfetchLandBYID();
+      dynamic jsonbody = createRequestfetchLandBYID(surveyID);
+      print("-----SURVEY DELETE RESPONSE____");
+      print(jsonbody);
+
+      APIManager().apiRequest(
+          routeGlobalKey.currentContext!, API.landsurveydelete, (response) async {
+        print("-----SURVEY DELETE RESPONSE____");
+        DeleteLandSurveyModel resp = response;
+
+        print("-----SURVEY LAND____");
+        if (resp == null ) return;
+        print("-----SURVEY LAND1____");
+        final db = DatabaseHelper.instance;
+showToast(resp.message);
+    await db.deleteSurvey(int.parse(resp.deletedSurveyId.toString()));
+          await db.getAllSurveys();
+
+        print("Land Surveys DELETED to DB successfully!");
+        notifyListeners();
+      }, (error) {
+        print('ERR msg is $error');
+
+        showToast("Server Not Responding");
+      }, jsonval: jsonbody);
+    } else {
+      /// Navigator.of(_keyLoader.currentContext).pop();
+      showToast("Please check internet connection");
+    }
+  }
+
+  fetchLandBYID(String surveyID) async {
+    var status1 = await ConnectionDetector.checkInternetConnection();
+
+    if (status1) {
+      dynamic jsonbody = createRequestfetchLandBYID(surveyID);
       print(jsonbody);
 
       APIManager().apiRequest(routeGlobalKey.currentContext!, API.getById,

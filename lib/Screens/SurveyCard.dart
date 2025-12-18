@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
+import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Provider/app_provider.dart';
 import 'package:hyworth_land_survey/Screens/MainTabScreen.dart';
 import 'package:hyworth_land_survey/Screens/SurveyForm/SurveyDetailForm.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
+import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 import 'package:hyworth_land_survey/Utils/commonstrings.dart';
+import 'package:hyworth_land_survey/Utils/internetConnection.dart';
 import 'package:hyworth_land_survey/Utils/sizeConfig.dart';
 import 'package:hyworth_land_survey/main.dart';
 import 'package:hyworth_land_survey/model/SurveyModel.dart';
@@ -144,8 +147,8 @@ class SurveyCard extends StatelessWidget {
                           _openExpandedView(
                             context,
                             surveyListing[index]
-                                .consentForms!
-                                .map((path) => File(path))
+                                .consentForms
+                                .map((path) => File(path.localPath))
                                 .toList(),
                           );
                         },
@@ -353,11 +356,10 @@ class SurveyCard extends StatelessWidget {
             )),
         const SizedBox(height: 2),
         Text(value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 14,
-              
               fontWeight: FontWeight.bold,
               color: CommonColors.blackshade,
             )),
@@ -464,13 +466,36 @@ class _MoreOptionsMenuState extends State<MoreOptionsMenu> {
         ),
         PopupMenuItem(
           onTap: () async {
-            await DatabaseHelper.instance
-                .deleteSurvey(widget.surveyListing!.id!);
             final provider = Provider.of<AppProvider>(context, listen: false);
-            provider.loadSPendingurveys();
+            var status1 = await ConnectionDetector.checkInternetConnection();
+            if (widget.surveyListing!.serverSynced == 1 && status1) {
+              showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
+                  "Are You Sure want to delete survey from server ? ",
+                  () async {
+                provider.deleteLandList(widget.surveyListing!.id!.toString());
+                await DatabaseHelper.instance
+                    .deleteSurvey(widget.surveyListing!.id!);
+                       provider.loadSPendingurveys();
             provider.loadSurveys();
             provider.loadConsentSurveys();
             provider.refreshDashboard();
+              });
+              
+            } else {
+              showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
+                  "Are You Sure want to delete survey from Local DB ? ",
+                  () async {
+                await DatabaseHelper.instance
+                    .deleteSurvey(widget.surveyListing!.id!);
+                       provider.loadSPendingurveys();
+            provider.loadSurveys();
+            provider.loadConsentSurveys();
+            provider.refreshDashboard();
+              });
+           
+            }
+
+         
           },
           child: Text(deleteLabel),
         ),
@@ -503,7 +528,14 @@ class UploadConsentWidget extends StatefulWidget {
 }
 
 class _UploadConsentWidgetState extends State<UploadConsentWidget> {
-  List<File> selectedFiles = [];
+  List<SurveyMediaModel> selectedFiles = [];
+
+  String _getMediaType(String path) {
+    final ext = path.split('.').last.toLowerCase();
+    if (['jpg', 'jpeg', 'png'].contains(ext)) return 'image';
+    if (ext == 'pdf') return 'pdf';
+    return 'file';
+  }
 
   Future<void> _pickFiles() async {
     if (await Permission.storage.request().isGranted ||
@@ -516,7 +548,16 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
 
       if (result != null) {
         setState(() {
-          selectedFiles.addAll(result.paths.map((p) => File(p!)));
+          selectedFiles.addAll(
+            result.paths.where((p) => p != null).map(
+                  (p) => SurveyMediaModel(
+                    surveyLocalId: widget.surveyListing.id!, // local DB id
+                    mediaType: _getMediaType(p!),
+                    localPath: p,
+                    isSynced: 0,
+                  ),
+                ),
+          );
         });
       }
       _openExpandedView();
@@ -576,10 +617,14 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
                         childAspectRatio: 0.7,
                       ),
                       itemBuilder: (context, index) {
-                        final file = selectedFiles[index];
-                        final ext = file.path.split('.').last.toLowerCase();
+                        // final file = selectedFiles[index];
+                        // final ext = file.localPath.split('.').last.toLowerCase();
+                        // final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
+                        final media = selectedFiles[index];
+                        final ext =
+                            media.localPath.split('.').last.toLowerCase();
                         final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
-
+                        final file = File(media.localPath);
                         return Stack(
                           children: [
                             GestureDetector(
@@ -738,7 +783,7 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
                               consentForms: selectedFiles
                                   .where((file) =>
                                       file != null) // keep only non-null
-                                  .map((file) => file!.path) // extract paths
+                                  .map((file) => file) // extract paths
                                   .toList(),
                             );
                             print(
@@ -777,213 +822,27 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
     );
   }
 
-//   void _openExpandedView() {
-//     showModalBottomSheet(
-//       context: context,
-//       isScrollControlled: true,
-//       builder: (context) => SizedBox(
-//         height: MediaQuery.of(context).size.height * 0.85,
-//         child: Column(
-//           children: [
-//             Padding(
-//               padding: const EdgeInsets.all(12.0),
-//               child: Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   const Text(
-//                     "All Uploaded Files",
-//                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//                   ),
-//                   IconButton(
-//                     icon: const Icon(Icons.close),
-//                     onPressed: () => Navigator.pop(context),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             const Divider(),
-//             Expanded(
-//               child: GridView.builder(
-//                 padding: const EdgeInsets.all(8),
-//                 itemCount: selectedFiles.length,
-//                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//                   crossAxisCount: 3,
-//                   crossAxisSpacing: 8,
-//                   mainAxisSpacing: 8,
-//                   childAspectRatio: 0.7,
-//                 ),
-//                 itemBuilder: (context, index) {
-//                   final file = selectedFiles[index];
-//                   final ext = file.path.split('.').last.toLowerCase();
-//                   final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
-
-//                   return Stack(
-//                     children: [
-//                       GestureDetector(
-//                         onTap: () => _openFile(file),
-//                         child: Container(
-//                           decoration: BoxDecoration(
-//                             borderRadius: BorderRadius.circular(8),
-//                             color: Colors.grey.shade200,
-//                           ),
-//                           child: isImage
-//                               ? ClipRRect(
-//                                   borderRadius: BorderRadius.circular(8),
-//                                   child: Image.file(file, fit: BoxFit.cover),
-//                                 )
-//                               : Center(
-//                                   child: Column(
-//                                     mainAxisAlignment: MainAxisAlignment.center,
-//                                     children: const [
-//                                       Icon(Icons.picture_as_pdf,
-//                                           color: Colors.red, size: 40),
-//                                       SizedBox(height: 4),
-//                                       Text(
-//                                         'PDF',
-//                                         style: TextStyle(
-//                                             fontWeight: FontWeight.bold,
-//                                             color: Colors.red),
-//                                       )
-//                                     ],
-//                                   ),
-//                                 ),
-//                         ),
-//                       ),
-//                       Positioned(
-//                         top: -4,
-//                         right: -4,
-//                         child: IconButton(
-//                           icon: const Icon(Icons.cancel, color: Colors.black54),
-//                           onPressed: () => _removeFile(index),
-//                           splashRadius: 18,
-//                         ),
-//                       ),
-//                     ],
-//                   );
-//                 },
-//               ),
-//             ),
-// Row(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children:  [
-//               Padding(
-//                               padding:  EdgeInsets.only(
-//                                   bottom: 4), // no insets here
-//                               child: ElevatedButton(
-//                                 style: ElevatedButton.styleFrom(
-//                                   backgroundColor:  CommonColors.bluishGreenMoreGreen
-//                                       ,
-
-//                                   disabledBackgroundColor:
-//                                       CommonColors.greyButton,
-//                                   padding: const EdgeInsets.symmetric(
-//                                       vertical: 8),
-//                                   shape: RoundedRectangleBorder(
-//                                     borderRadius: BorderRadius.circular(8),
-//                                   ),
-//                                 ),
-//                                 onPressed: ()
-//                                 async {
-//                                                 SurveyModel survey = SurveyModel(
-//                             surveyId: widget.surveyListing!.surveyId.toString() ??
-//                                 "", // never null
-//                             userId: "1",
-//                             landState: widget.surveyListing.landState ??
-//                                 "",
-//                             landDistrict:
-//                                 widget.surveyListing.landDistrict ??
-//                                     "",
-//                             landTaluka: widget.surveyListing.landTaluka ??
-//                                 "",
-//                             landVillage:
-//                                widget.surveyListing.landVillage ??
-//                                     "",
-//                             landLatitude:
-//                                 double.parse(widget.surveyListing!.landLatitude!.toString()),
-//                             landLongitude:
-//                                 double.parse(widget.surveyListing.landLongitude.toString()),
-//                             landAreaInAcres:
-//                                widget.surveyListing.landAreaInAcres ?? "",
-//                             landType: widget.surveyListing.landType ?? "",
-//                             landRateCommercialEscalation:
-//                                 widget.surveyListing.landRateCommercialEscalation ?? "",
-//                             subStationName:
-//                                 widget.surveyListing.subStationName ?? "",
-//                             subStationDistrict:widget.surveyListing.subStationDistrict ?? "",
-//                             subStationTaluka:widget.surveyListing.subStationTaluka ?? "",
-//                             subStationVillage: widget.surveyListing.subStationVillage?? "",
-//                             subStationLatitude:double.parse(widget.surveyListing.subStationLatitude.toString()),
-//                             subStationLongitude: double.parse(widget.surveyListing.subStationLongitude.toString()),
-//                             inchargeName: widget.surveyListing.inchargeName ?? "",
-//                             subStationInchargeContact:widget.surveyListing.subStationInchargeContact ?? "",
-//                             operatorName:widget.surveyListing.operatorName ?? "",
-//                             operatorContact:widget.surveyListing.operatorContact ?? "",
-//                             subStationVoltageLevel:widget.surveyListing.subStationVoltageLevel ?? "",
-//                             subStationCapacity: widget.surveyListing.subStationCapacity ?? "",
-//                             distanceSubStationToLand:widget.surveyListing.distanceSubStationToLand ?? "",
-//                             plotDistanceFromMainRoad: widget.surveyListing.plotDistanceFromMainRoad ?? "",
-//                             evacuationLevel:widget.surveyListing.evacuationLevel ?? "",
-//                             windZone: widget.surveyListing.windZone ?? "",
-//                             groundWaterRainFall:widget.surveyListing.groundWaterRainFall ?? "",
-//                             soilType:widget.surveyListing.soilType ?? "",
-//                             nearestHighway:widget.surveyListing.nearestHighway ?? "",
-//                             surveyForms: widget.surveyListing.surveyForms!.isNotEmpty ? widget.surveyListing.surveyForms : [],
-//                             landPictures:widget.surveyListing.landPictures!.isNotEmpty?widget.surveyListing.landPictures!:[],
-//                             isSurveyapproved: 0,
-//                             consentAvailable: 1,
-//                             isSync: 0,
-//                             selectedLanguage: Provider.of<AppProvider>(context, listen: false).currentLanguage,
-//                             surveyDate: widget.surveyListing!.surveyDate,
-//                             updatedsurveyDate: DateTime.now().millisecondsSinceEpoch,
-//                             surveyStatus: CommonStrings.strRequired,
-//                             consentForms: selectedFiles
-//                 .where((file) => file != null) // keep only non-null
-//                 .map((file) => file!.path) // extract paths
-//                 .toList(),
-//                             );
-//                         print(
-//                             "Survey : ${widget.surveyListing!.id.toString()}");
-
-//                         final updatedRows = await DatabaseHelper.instance
-//                             .updateSurvey(survey, widget.surveyListing!.id!);
-//                         print("Survey : ${survey.surveyId}");
-//                         print("Survey : ${survey.isSurveyapproved}");
-//                         if (updatedRows > 0) {
-//                           print("✅ Survey updated successfully");
-//                         } else {
-//                           print("⚠️ No survey found to update");
-//                         }
-//                          Navigator.pop(context, true);
-//                                 },
-//                                 child: Text(
-//                                   "Upload",
-//                                   style: TextStyle(
-//                                       fontSize: 12,
-//                                       color: Colors.white,
-//                                       fontWeight: FontWeight.bold),
-//                                 ),
-//                               ),
-//                             ),
-//             ],
-//           ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-// Example: while loading DB files, push URLs into selectedFiles
   void loadDbFiles() {
-    if (widget.surveyListing.consentForms != null) {
+    final dbFiles = widget.surveyListing.consentForms;
+
+    if (dbFiles != null && dbFiles.isNotEmpty) {
       setState(() {
-        selectedFiles.addAll(
-          widget.surveyListing.consentForms!
-              .map((path) => File(path)) // convert String → File
-              .toList(),
-        );
+        selectedFiles.addAll(dbFiles);
       });
     }
   }
+
+  // void loadDbFiles() {
+  //   if (widget.surveyListing.consentForms != null) {
+  //     setState(() {
+  //       selectedFiles.addAll(
+  //         widget.surveyListing.consentForms!
+  //             .map((path) => File(path.localPath)) // convert String → File
+  //             .toList(),
+  //       );
+  //     });
+  //   }
+  // }
 
   @override
   void initState() {
@@ -1013,15 +872,21 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
                       scrollDirection: Axis.horizontal,
                       itemCount: selectedFiles.length,
                       itemBuilder: (context, index) {
-                        final file = selectedFiles[index];
+                        // final file = selectedFiles[index];
 
-                        // Check if this is a local file or DB file (string url)
-                        final isLocalFile = file is File;
-                        final String path =
-                            isLocalFile ? file.path : file.toString();
+                        // // Check if this is a local file or DB file (string url)
+                        // final isLocalFile = file is File;
+                        // final String path =
+                        //     isLocalFile ? file.path : file.toString();
+                        // final ext = path.split('.').last.toLowerCase();
+                        // final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
+                        final media = selectedFiles[index];
+                        final path = media.localPath;
+
                         final ext = path.split('.').last.toLowerCase();
                         final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
 
+                        final file = File(path);
                         return Stack(
                           children: [
                             GestureDetector(
@@ -1037,7 +902,7 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
                                 child: isImage
                                     ? ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
-                                        child: isLocalFile
+                                        child: isImage
                                             ? Image.file(file,
                                                 fit: BoxFit.cover)
                                             : Image.network(path,
@@ -1100,216 +965,3 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
     );
   }
 }
-
-// class UploadConsentWidget extends StatefulWidget {
-//   final bool uploadconsent;
-//   const UploadConsentWidget({super.key, required this.uploadconsent});
-
-//   @override
-//   State<UploadConsentWidget> createState() => _UploadConsentWidgetState();
-// }
-
-// class _UploadConsentWidgetState extends State<UploadConsentWidget> {
-//   List<File> selectedFiles = [];
-
-//   Future<void> _pickFiles() async {
-//     if (await Permission.storage.request().isGranted ||
-//         await Permission.photos.request().isGranted) {
-//       FilePickerResult? result = await FilePicker.platform.pickFiles(
-//         allowMultiple: true,
-//         type: FileType.custom,
-//         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-//       );
-
-//       if (result != null) {
-//         setState(() {
-//           selectedFiles.addAll(result.paths.map((p) => File(p!)));
-//         });
-//       }
-//     } else {
-//       print("Permission denied");
-//     }
-//   }
-
-//   void _openFile(File file) {
-//     OpenFilex.open(file.path);
-//   }
-
-//   void _removeFile(int index) {
-//     setState(() {
-//       selectedFiles.removeAt(index);
-//     });
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (!widget.uploadconsent) return Container();
-
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         const Divider(),
-//         GestureDetector(
-//           onTap: _pickFiles,
-//           child: Row(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: const [
-//               Icon(Icons.upload, color: Colors.blue),
-//               SizedBox(width: 6),
-//               Text(
-//                 "Upload Consent",
-//                 style: TextStyle(color: Colors.blue),
-//               )
-//             ],
-//           ),
-//         ),
-//         const SizedBox(height: 12),
-
-//         if (selectedFiles.isNotEmpty)
-//           GridView.builder(
-//             shrinkWrap: true,
-//             physics: const NeverScrollableScrollPhysics(),
-//             itemCount: selectedFiles.length,
-//             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//               crossAxisCount: 3,
-//               crossAxisSpacing: 8,
-//               mainAxisSpacing: 8,
-//               childAspectRatio: 0.7,
-//             ),
-//             itemBuilder: (context, index) {
-//               final file = selectedFiles[index];
-//               final ext = file.path.split('.').last.toLowerCase();
-//               final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
-
-//               return Stack(
-//                 children: [
-//                   GestureDetector(
-//                     onTap: () => _openFile(file),
-//                     child: Container(
-//                       decoration: BoxDecoration(
-//                         borderRadius: BorderRadius.circular(8),
-//                         color: Colors.grey.shade200,
-//                       ),
-//                       child: isImage
-//                           ? ClipRRect(
-//                               borderRadius: BorderRadius.circular(8),
-//                               child: Image.file(
-//                                 file,
-//                                 fit: BoxFit.cover,
-//                               ),
-//                             )
-//                           : Center(
-//                               child: Column(
-//                                 mainAxisAlignment: MainAxisAlignment.center,
-//                                 children: const [
-//                                   Icon(Icons.picture_as_pdf, color: Colors.red, size: 40),
-//                                   SizedBox(height: 4),
-//                                   Text(
-//                                     'PDF',
-//                                     style: TextStyle(
-//                                         fontWeight: FontWeight.bold,
-//                                         color: Colors.red),
-//                                   )
-//                                 ],
-//                               ),
-//                             ),
-//                     ),
-//                   ),
-//                   // Remove button
-//                   Positioned(
-//                     top: -4,
-//                     right: -4,
-//                     child: IconButton(
-//                       icon: const Icon(Icons.cancel, color: Colors.black54),
-//                       onPressed: () => _removeFile(index),
-//                       splashRadius: 18,
-//                     ),
-//                   ),
-//                 ],
-//               );
-//             },
-//           ),
-//       ],
-//     );
-//   }
-// }
-
-// class UploadConsentWidget extends StatefulWidget {
-//   final bool uploadconsent;
-//   const UploadConsentWidget({super.key, required this.uploadconsent});
-
-//   @override
-//   State<UploadConsentWidget> createState() => _UploadConsentWidgetState();
-// }
-
-// class _UploadConsentWidgetState extends State<UploadConsentWidget> {
-//   List<File> selectedFiles = [];
-
-// Future<void> _pickFiles() async {
-//   // Request both storage & media permissions depending on Android version
-//   if (await Permission.storage.request().isGranted ||
-//       await Permission.photos.request().isGranted) {
-//     FilePickerResult? result = await FilePicker.platform.pickFiles(
-//       allowMultiple: true,
-//       type: FileType.custom,
-//       allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-//     );
-
-//     if (result != null) {
-//       setState(() {
-//         selectedFiles = result.paths.map((p) => File(p!)).toList();
-//       });
-//     }
-//   } else {
-//     print("Permission denied");
-//   }
-// }
-//   void _openFile(File file) {
-//     OpenFilex.open(file.path); // Opens in default viewer
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (!widget.uploadconsent) return Container();
-
-//     return Column(
-//       children: [
-//         const Divider(),
-//         GestureDetector(
-//           onTap: _pickFiles,
-//           child: Row(
-//             mainAxisAlignment: MainAxisAlignment.center,
-//             children: [
-//               const Icon(Icons.upload, color: Colors.blue),
-//               const SizedBox(width: 6),
-//               Text(
-//                 "Upload Consent",
-//                 style: const TextStyle(color: Colors.blue),
-//               )
-//             ],
-//           ),
-//         ),
-//         const SizedBox(height: 12),
-
-//         // Show list of uploaded files
-//         if (selectedFiles.isNotEmpty)
-//           Column(
-//             children: selectedFiles.map((file) {
-//               final ext = file.path.split('.').last.toLowerCase();
-//               final isImage = ['jpg', 'jpeg', 'png'].contains(ext);
-//               return ListTile(
-//                 leading: isImage
-//                     ? Image.file(file, width: 40, height: 40, fit: BoxFit.cover)
-//                     : const Icon(Icons.picture_as_pdf, color: Colors.red),
-//                 title: Text(file.path.split('/').last),
-//                 trailing: IconButton(
-//                   icon: const Icon(Icons.visibility, color: Colors.green),
-//                   onPressed: () => _openFile(file),
-//                 ),
-//               );
-//             }).toList(),
-//           ),
-//       ],
-//     );
-//   }
-// }
