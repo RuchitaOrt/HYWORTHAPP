@@ -19,13 +19,28 @@ class MediaForm extends StatefulWidget {
 
 class _MediaFormState extends State<MediaForm> {
 
-  Future<void> pickImage(int index, BasicFormProvider basicFormProvider) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery);
-    if (picked != null) {
-      basicFormProvider.setMediaFile(index, File(picked.path));
-    }
-  }
+  // Future<void> pickImage(int index, BasicFormProvider basicFormProvider) async {
+  //   final picker = ImagePicker();
+  //   final picked = await picker.pickImage(source: ImageSource.gallery);
+  //   if (picked != null) {
+  //     basicFormProvider.setMediaFile(index, File(picked.path),basicFormProvider.surverID!);
+  //   }
+  // }
+Future<void> pickImage(
+  int index,
+  BasicFormProvider basicFormProvider,
+) async {
+  final picker = ImagePicker();
+  final picked = await picker.pickImage(source: ImageSource.gallery);
+
+  if (picked == null) return;
+
+  basicFormProvider.setMediaFile(
+    index,
+    File(picked.path),
+    "", // 👈 NO !
+  );
+}
 
   void removeImage(int index, BasicFormProvider basicFormProvider) {
     basicFormProvider.removeMediaFile(index);
@@ -90,7 +105,7 @@ class _MediaFormState extends State<MediaForm> {
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: Image.file(
-                              file,
+                             File(file.localPath!),
                               fit: BoxFit.cover,
                             ),
                           )
@@ -107,7 +122,9 @@ class _MediaFormState extends State<MediaForm> {
                       top: 8,
                       right: 8,
                       child: GestureDetector(
-                        onTap: () => removeImage(index, basicFormProvider),
+                        onTap: () =>
+                        
+                        basicFormProvider.surverID==null?basicFormProvider.removeMediaFile(index): basicFormProvider.removeImageLandImages(index, basicFormProvider,basicFormProvider.surverID!,basicFormProvider.OtherLandmediaFiles[index]!.serverMediaId.toString(),File(basicFormProvider.OtherLandmediaFiles[index]!.localPath)),
                         child: const CircleAvatar(
                           backgroundColor: CommonColors.grey75,
                           radius: 12,

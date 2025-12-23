@@ -1,5 +1,6 @@
   import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:hyworth_land_survey/Screens/login_screen.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 
 
@@ -134,7 +135,10 @@ Future<bool> showConfirmDialog(BuildContext context,
     Widget okButton = ElevatedButton(
         child: Text("OK"),
         onPressed: () {
-
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => LoginScreen()),
+  );
         });
 
     // set up the AlertDialog

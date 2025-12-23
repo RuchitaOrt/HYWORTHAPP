@@ -55,14 +55,14 @@ class SurveyModel {
   final int? updatedsurveyDate;
   final String?
       surveyStatus; //pending,rejected,required,not required,await confirmation,rejected
-       final String? landStateID;
+  final String? landStateID;
   final String? landDistrictID;
   final String? landTalukaID;
   final String? landVillageID;
   final String? substationDistrictID;
   final String? substationTalukaID;
   final String? substationVillageID;
-  
+
   SurveyModel({
     this.id, // nullable for new inserts
     this.surveyId,
@@ -103,7 +103,7 @@ class SurveyModel {
     this.consentAvailable,
     this.isSurveyapproved,
     this.serverSynced,
-     required this.landPictures,
+    required this.landPictures,
     required this.surveyForms,
     required this.consentForms,
     // this.landPictures,
@@ -164,7 +164,7 @@ class SurveyModel {
         "consentAvailable": consentAvailable,
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
-        "serverSynced":serverSynced,
+        "serverSynced": serverSynced,
         "landPictures": landPictures,
         "surveyForms": surveyForms,
         "selectedLanguage": selectedLanguage,
@@ -172,7 +172,7 @@ class SurveyModel {
         "surveyDate": surveyDate,
         "updatedsurveyDate": updatedsurveyDate,
         'surveyStatus': surveyStatus,
-         "landStateID":landStateID,
+        "landStateID": landStateID,
         "landDistrictID": landDistrictID,
         "landTalukaID": landTalukaID,
         "landVillageID": landVillageID,
@@ -222,18 +222,18 @@ class SurveyModel {
         "consentAvailable": consentAvailable,
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
-        "serverSynced":serverSynced,
+        "serverSynced": serverSynced,
         'landPictures': jsonEncode(
-  landPictures.map((e) => e.localPath).toList(),
-),
+          landPictures.map((e) => e.localPath).toList(),
+        ),
 
-'surveyForms': jsonEncode(
-  surveyForms.map((e) => e.localPath).toList(),
-),
+        'surveyForms': jsonEncode(
+          surveyForms.map((e) => e.localPath).toList(),
+        ),
 
-'consentForms': jsonEncode(
-  consentForms.map((e) => e.localPath).toList(),
-),
+        'consentForms': jsonEncode(
+          consentForms.map((e) => e.localPath).toList(),
+        ),
 
         // "landPictures": jsonEncode(landPictures ?? []),
         // "surveyForms": jsonEncode(surveyForms ?? []),
@@ -244,7 +244,7 @@ class SurveyModel {
         "surveyDate": surveyDate,
         "updatedsurveyDate": updatedsurveyDate,
         "surveyStatus": surveyStatus,
-       "landStateID":landStateID,
+        "landStateID": landStateID,
         "landDistrictID": landDistrictID,
         "landTalukaID": landTalukaID,
         "landVillageID": landVillageID,
@@ -292,46 +292,51 @@ class SurveyModel {
       nearestHighway: json["nearestHighway"],
       consentAvailable: json["consentAvailable"],
       isSync: json["isSync"],
-      serverSynced:json["serverSynced"],
+      serverSynced: json["serverSynced"],
       isSurveyapproved: json["isSurveyapproved"],
       // landPictures: List<SurveyMediaModel>.from(jsonDecode(json["landPictures"] ?? '[]')),
       // surveyForms: List<SurveyMediaModel>.from(jsonDecode(json["surveyForms"] ?? '[]')),
       // consentForms: List<SurveyMediaModel>.from(jsonDecode(json["consentForms"] ?? '[]')),
       landPictures: (json['landPictures'] != null)
-    ? (jsonDecode(json['landPictures']) as List)
-        .map((path) => SurveyMediaModel(
-              surveyLocalId: json['id'],
-              mediaType: MediaTypeValue.landPicture,
-              localPath: path,
-              isSynced: 1,
-            ))
-        .toList()
-    : [],
-
-surveyForms: (json['surveyForms'] != null)
-    ? (jsonDecode(json['surveyForms']) as List)
-        .map((path) => SurveyMediaModel(
-              surveyLocalId: json['id'],
-              mediaType: MediaTypeValue.surveyForm,
-              localPath: path,
-              isSynced: 1,
-            ))
-        .toList()
-    : [],
-
-consentForms: (json['consentForms'] != null)
-    ? (jsonDecode(json['consentForms']) as List)
-        .map((path) => SurveyMediaModel(
-              surveyLocalId: json['id'],
-              mediaType: MediaTypeValue.consentForm,
-              localPath: path,
-              isSynced: 1,
-            ))
-        .toList()
-    : [],
-
+          ? (jsonDecode(json['landPictures']) as List)
+              .map((path) => SurveyMediaModel(
+                    surveyLocalId: json['id'].toString(),
+                    serverMediaId: "",
+                    createdAt: 0,
+                    isdeleted: 0,
+                    mediaType: MediaTypeValue.landPicture,
+                    localPath: path,
+                    isSynced: 1,
+                  ))
+              .toList()
+          : [],
+      surveyForms: (json['surveyForms'] != null)
+          ? (jsonDecode(json['surveyForms']) as List)
+              .map((path) => SurveyMediaModel(
+                    surveyLocalId: json['id'].toString(),
+                    serverMediaId: "",
+                    createdAt: 0,
+                    isdeleted: 0,
+                    mediaType: MediaTypeValue.surveyForm,
+                    localPath: path,
+                    isSynced: 1,
+                  ))
+              .toList()
+          : [],
+      consentForms: (json['consentForms'] != null)
+          ? (jsonDecode(json['consentForms']) as List)
+              .map((path) => SurveyMediaModel(
+                    surveyLocalId: json['id'].toString(),
+                    serverMediaId: "",
+                    createdAt: 0,
+                    isdeleted: 0,
+                    mediaType: MediaTypeValue.consentForm,
+                    localPath: path,
+                    isSynced: 1,
+                  ))
+              .toList()
+          : [],
       selectedLanguage: json['selectedLanguage'],
-      
       surveyDate: json['surveyDate'],
       updatedsurveyDate: json['updatedsurveyDate'],
       surveyStatus: json["surveyStatus"] ?? "",
@@ -340,8 +345,82 @@ consentForms: (json['consentForms'] != null)
       landVillageID: json['landVillageID'],
       substationDistrictID: json["substationDistrictID"],
       substationTalukaID: json['substationTalukaID'],
-      landStateID:json['landStateID'],
+      landStateID: json['landStateID'],
       substationVillageID: json['substationVillageID']);
+
+      SurveyModel copyWith({
+  int? id,
+  String? surveyId,
+  String? userId,
+  List<SurveyMediaModel>? landPictures,
+  List<SurveyMediaModel>? surveyForms,
+  List<SurveyMediaModel>? consentForms,
+  int? isSync,
+  int? serverSynced,
+  int? isSurveyapproved,
+}) {
+  return SurveyModel(
+    id: id ?? this.id,
+    surveyId: surveyId ?? this.surveyId,
+    userId: userId ?? this.userId,
+
+    landPictures: landPictures ?? this.landPictures,
+    surveyForms: surveyForms ?? this.surveyForms,
+    consentForms: consentForms ?? this.consentForms,
+
+    isSync: isSync ?? this.isSync,
+    serverSynced: serverSynced ?? this.serverSynced,
+    isSurveyapproved: isSurveyapproved ?? this.isSurveyapproved,
+
+    // KEEP existing values
+    solarParkACCapacity: solarParkACCapacity,
+    solarParkDCCapacity: solarParkDCCapacity,
+    gridConnectivity: gridConnectivity,
+    landLocation: landLocation,
+    landDHQ: landDHQ,
+    landState: landState,
+    landDistrict: landDistrict,
+    landTaluka: landTaluka,
+    landVillage: landVillage,
+    landLatitude: landLatitude,
+    landLongitude: landLongitude,
+    landAreaInAcres: landAreaInAcres,
+    landType: landType,
+    landRateCommercialEscalation: landRateCommercialEscalation,
+    subStationName: subStationName,
+    subStationDistrict: subStationDistrict,
+    subStationTaluka: subStationTaluka,
+    subStationVillage: subStationVillage,
+    subStationLatitude: subStationLatitude,
+    subStationLongitude: subStationLongitude,
+    subStationInchargeContact: subStationInchargeContact,
+    inchargeName: inchargeName,
+    operatorName: operatorName,
+    operatorContact: operatorContact,
+    subStationVoltageLevel: subStationVoltageLevel,
+    subStationCapacity: subStationCapacity,
+    distanceSubStationToLand: distanceSubStationToLand,
+    plotDistanceFromMainRoad: plotDistanceFromMainRoad,
+    evacuationLevel: evacuationLevel,
+    soilType: soilType,
+    windZone: windZone,
+    groundWaterRainFall: groundWaterRainFall,
+    nearestHighway: nearestHighway,
+    consentAvailable: consentAvailable,
+    selectedLanguage: selectedLanguage,
+    surveyDate: surveyDate,
+    updatedsurveyDate: updatedsurveyDate,
+    surveyStatus: surveyStatus,
+    landStateID: landStateID,
+    landDistrictID: landDistrictID,
+    landTalukaID: landTalukaID,
+    landVillageID: landVillageID,
+    substationDistrictID: substationDistrictID,
+    substationTalukaID: substationTalukaID,
+    substationVillageID: substationVillageID,
+  );
+}
+
 }
 // class SurveyDetailVM {
 //   final SurveyModel survey;
@@ -357,20 +436,25 @@ consentForms: (json['consentForms'] != null)
 //   });
 // }
 class SurveyMediaModel {
-  final int? id;
-  final int surveyLocalId;
+   int? id;
+  final String surveyLocalId;
+  final String serverMediaId;
   final String mediaType;
   final String localPath;
-  final String? serverId;
+
   final int isSynced;
+  final int isdeleted;
+  final int createdAt;
 
   SurveyMediaModel({
     this.id,
     required this.surveyLocalId,
     required this.mediaType,
     required this.localPath,
-    this.serverId,
-    required this.isSynced, 
+    required this.serverMediaId,
+    required this.isdeleted,
+    required this.createdAt,
+    required this.isSynced,
   });
 
   factory SurveyMediaModel.fromMap(Map<String, dynamic> map) {
@@ -379,8 +463,9 @@ class SurveyMediaModel {
       surveyLocalId: map['survey_local_id'],
       mediaType: map['media_type'],
       localPath: map['local_path'],
-      serverId: map['server_id'],
-      isSynced: map['is_synced'],
+      createdAt: map['created_at'],
+      isSynced: map['is_synced'], serverMediaId: map['server_media_id'],
+       isdeleted: map['is_deleted'],
     );
   }
 
@@ -390,11 +475,12 @@ class SurveyMediaModel {
       'survey_local_id': surveyLocalId,
       'media_type': mediaType,
       'local_path': localPath,
-      'server_id': serverId,
+      'is_deleted': isdeleted,
+      "server_media_id":serverMediaId,
+      "created_at":createdAt,
       'is_synced': isSynced,
     };
   }
-  
 }
 
 class MediaTypeValue {

@@ -78,7 +78,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         padding: const EdgeInsets.all(8),
         child: Consumer<AppProvider>(
           builder: (context, provider, child) {
-            return provider.surveys.length == 0
+            return provider.surveys.isEmpty
                 ? _buildEmptyState(context)
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

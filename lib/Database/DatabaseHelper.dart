@@ -111,7 +111,9 @@ class DatabaseHelper {
   local_path TEXT,              -- file path OR server url
   is_synced INTEGER,            -- 0 / 1
   is_deleted INTEGER,           -- 0 / 1
-  created_at INTEGER
+  created_at INTEGER,
+
+  UNIQUE (survey_local_id, media_type, local_path)
 )
 ''');
 
@@ -185,35 +187,300 @@ Future<void> insertSurveyMedia({
     'created_at': DateTime.now().millisecondsSinceEpoch,
   });
 }
-Future<void> insertSurveyMediaList({
-  required int surveyLocalId,
-  List<File> landPictures = const [],
-  List<File> surveyForms = const [],
-  List<File> consentForms = const [],
+// Future<int> insertSurveyMediaList({
+//   required String surveyLocalId, // keep as String now
+//   List<SurveyMediaModel>? landPictures,
+//   List<SurveyMediaModel>? surveyForms,
+//   List<SurveyMediaModel>? consentForms,
+// }) async {
+//   final db = await database;
+//   int totalInserted = 0;
+
+//   // Example for landPictures
+//   if (landPictures != null) {
+//     for (var media in landPictures) {
+//       totalInserted += await db.insert('survey_media', media.toMap());
+//     }
+//   }
+
+//   // Example for surveyForms
+//   if (surveyForms != null) {
+//     for (var media in surveyForms) {
+//       totalInserted += await db.insert('survey_media', media.toMap());
+//     }
+//   }
+
+//   // Example for consentForms
+//   if (consentForms != null) {
+//     for (var media in consentForms) {
+//       totalInserted += await db.insert('survey_media', media.toMap());
+//     }
+//   }
+
+//   return totalInserted; // returns total number of rows inserted
+// }
+
+Future<bool> mediaExists({
+  required String surveyLocalId,
+  required String mediaType,
+  required String localPath,
 }) async {
   final db = await database;
-  final batch = db.batch();
+  final result = await db.query(
+    'survey_media',
+    where:
+        'survey_local_id = ? AND media_type = ? AND local_path = ? AND is_deleted = 0',
+    whereArgs: [surveyLocalId, mediaType, localPath],
+    limit: 1,
+  );
+  return result.isNotEmpty;
+}
 
-  void addMedia(List<File> files, String type) {
+Future<int> insertSurveyMediaList({
+  required String surveyLocalId,
+  List<SurveyMediaModel>? landPictures,
+  List<SurveyMediaModel>? surveyForms,
+  List<SurveyMediaModel>? consentForms,
+}) async {
+  final db = await database;
+  int totalInserted = 0;
+   print("INSERT SURVEY MEDIA");
+ print(landPictures!.length.toString());
+ Future<void> addMedia(List<SurveyMediaModel>? files, String type) async {
+  if (files == null || files.isEmpty) return;
+
+  for (final file in files) {
+
+    final map = {
+      'survey_local_id': file.surveyLocalId,
+      'server_media_id': file.serverMediaId,
+      'media_type': type,
+      'local_path': file.localPath,
+      'is_synced': file.isSynced,
+      'is_deleted': 0,
+      'created_at': file.createdAt,
+    };
+
+    print("📝Map media value before inserting:  $map");
+
+    // ✅ INSERT ONCE
+    // final insertedId = await db.insert('survey_media', map);
+    final insertedId = await db.insert(
+  'survey_media',
+  map,
+  conflictAlgorithm: ConflictAlgorithm.ignore,
+);
+
+if (insertedId == 0) {
+  print("⏭ Duplicate ignored: ${file.localPath}");
+} else {
+  print("✅ Inserted: ${file.localPath}");
+}
+
+     print("RANGAMEDIA ${insertedId}");
+    // 🔑 VERY IMPORTANT
+    // Save DB ID back into model so next save won't duplicate
+    // file.id = insertedId;
+
+    totalInserted++;
+  }
+}
+
+  await addMedia(landPictures, 'land');
+  await addMedia(surveyForms, 'survey');
+  await addMedia(consentForms, 'consent');
+
+  print("✅ Total rows inserted: $totalInserted");
+  return totalInserted;
+}
+
+// Future<int> insertSurveyMediaList({
+//   required String surveyLocalId, // keep as String
+//   List<SurveyMediaModel>? landPictures,
+//   List<SurveyMediaModel>? surveyForms,
+//   List<SurveyMediaModel>? consentForms,
+// }) async {
+//   final db = await database;
+//   int totalInserted = 0;
+
+//   // Make this function async so we can await db.insert
+//   Future<void> addMedia(List<SurveyMediaModel>? files, String type) async {
+//     if (files == null) return;
+//     for (var file in files) {
+//       final map = {
+//         'survey_local_id': surveyLocalId,
+//         'server_media_id': file.serverMediaId,
+//         'media_type': type,
+//         'local_path': file.localPath,
+//         'is_synced': 0,
+//         'is_deleted': 0,
+//         'created_at': DateTime.now().millisecondsSinceEpoch,
+//       };
+
+//       print("📝 Inserting media: $map");
+//       totalInserted += await db.insert('survey_media', map); // ✅ await here
+//     }
+//   }
+
+//   await addMedia(landPictures, 'land');
+//   await addMedia(surveyForms, 'survey');
+//   await addMedia(consentForms, 'consent');
+
+//   print("✅ Total rows inserted: $totalInserted");
+//   return totalInserted;
+// }
+Future<int> deleteSurveyMedia({
+  required String surveyLocalId,
+  required String localPath,
+}) async {
+  final db = await database;
+
+  final rows = await db.delete(
+    'survey_media',
+    where: 'survey_local_id = ? AND local_path = ?',
+    whereArgs: [surveyLocalId, localPath],
+  );
+
+  print("🗑 Deleted rows: $rows");
+  return rows;
+}
+
+Future<int> hardDeleteSurveyMediaByServerId({
+  required String surveyLocalId,
+ 
+}) async {
+  final db = await database;
+
+  final rows = await db.delete(
+    'survey_media',
+    where: '''
+      survey_local_id = ?
+    
+    ''',
+    whereArgs: [
+      surveyLocalId,
+      
+    ],
+  );
+
+  print("🗑 HARD deleted rows: $rows ");
+  return rows;
+}
+
+
+Future<int> upsertSurveyMediaList({
+  required String surveyLocalId,
+  List<SurveyMediaModel> landPictures = const [],
+  List<SurveyMediaModel> surveyForms = const [],
+  List<SurveyMediaModel> consentForms = const [],
+}) async {
+  final db = await database;
+  int totalAffected = 0;
+
+  Future<void> upsert(List<SurveyMediaModel> files, String type) async {
     for (final file in files) {
-      batch.insert('survey_media', {
+      final existing = await db.query(
+        'survey_media',
+        where: 'survey_local_id = ? AND server_media_id = ?',
+        whereArgs: [surveyLocalId, file.serverMediaId],
+      );
+
+      final map = {
         'survey_local_id': surveyLocalId,
-        'server_media_id': null,
+        'server_media_id': file.serverMediaId,
         'media_type': type,
-        'local_path': file.path,
+        'local_path': file.localPath,
         'is_synced': 0,
         'is_deleted': 0,
         'created_at': DateTime.now().millisecondsSinceEpoch,
-      });
+      };
+
+      if (existing.isEmpty) {
+        await db.insert('survey_media', map);
+        totalAffected++;
+      } else {
+        await db.update(
+          'survey_media',
+          map,
+          where: 'survey_local_id = ? AND server_media_id = ?',
+          whereArgs: [surveyLocalId, file.serverMediaId],
+        );
+        totalAffected++;
+      }
     }
   }
 
-  addMedia(landPictures, 'land');
-  addMedia(surveyForms, 'survey');
-  addMedia(consentForms, 'consent');
+  await upsert(landPictures, 'land');
+  await upsert(surveyForms, 'survey');
+  await upsert(consentForms, 'consent');
 
-  await batch.commit(noResult: true);
+  return totalAffected;
 }
+
+// Future<void> insertSurveyMediaList({
+//   required int surveyLocalId,
+//   List<SurveyMediaModel> landPictures = const [],
+//   List<SurveyMediaModel> surveyForms = const [],
+//   List<SurveyMediaModel> consentForms = const [],
+// }) async {
+//   final db = await database;
+//   final batch = db.batch();
+
+//   void addMedia(List<SurveyMediaModel> files, String type) {
+//     for (final file in files) {
+//       final map = {
+//         'survey_local_id': surveyLocalId,
+//         'server_media_id': file.id,
+//         'media_type': type,
+//         'local_path': file.localPath,
+//         'is_synced': 0,
+//         'is_deleted': 0,
+//         'created_at': DateTime.now().millisecondsSinceEpoch,
+//       };
+
+//       print("📝 Inserting media: $map"); // ✅ print inserted value
+//       batch.insert('survey_media', map);
+//     }
+//   }
+
+//   addMedia(landPictures, 'land');
+//   addMedia(surveyForms, 'survey');
+//   addMedia(consentForms, 'consent');
+
+//   await batch.commit(noResult: true);
+
+//   print("✅ Batch insert committed for survey $surveyLocalId");
+// }
+
+// Future<void> insertSurveyMediaList({
+//   required int surveyLocalId,
+//   List<SurveyMediaModel> landPictures = const [],
+//   List<SurveyMediaModel> surveyForms = const [],
+//   List<SurveyMediaModel> consentForms = const [],
+// }) async {
+//   final db = await database;
+//   final batch = db.batch();
+
+//   void addMedia(List<SurveyMediaModel> files, String type) {
+//     for (final file in files) {
+//       batch.insert('survey_media', {
+//         'survey_local_id': surveyLocalId,
+//         'server_media_id': file.id,
+//         'media_type': type,
+//         'local_path': file.localPath,
+//         'is_synced': 0,
+//         'is_deleted': 0,
+//         'created_at': DateTime.now().millisecondsSinceEpoch,
+//       });
+//     }
+//   }
+
+//   addMedia(landPictures, 'land');
+//   addMedia(surveyForms, 'survey');
+//   addMedia(consentForms, 'consent');
+
+//   await batch.commit(noResult: true);
+// }
 Future<int> updateSurveySyncFlags({
   required String surveyId,
   required int syncStatus,
@@ -280,7 +547,7 @@ print("RUCHITA UPDATED updateSurveySyncFlags IN LOCAL DB");
     await batch.commit(noResult: true);
   }
 Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
-    int surveyLocalId) async {
+    String surveyLocalId) async {
   final db = await database;
 
   final List<Map<String, dynamic>> maps = await db.query(
@@ -289,7 +556,8 @@ Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
     whereArgs: [surveyLocalId],
     orderBy: 'id ASC',
   );
-
+  print("MEdia LIST DATa");
+print(maps);
   return maps.map((e) => SurveyMediaModel.fromMap(e)).toList();
 }
 
@@ -316,7 +584,23 @@ Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
 
     await batch.commit(noResult: true);
   }
-
+Future<List<SurveyMediaModel>> getSurveyMedia(String surveyLocalId) async {
+  print("GetSurveyMedia");
+  print(surveyLocalId);
+  final db = await database;
+  final res = await db.query(
+    'survey_media',
+    where: 'survey_local_id = ? AND is_deleted = 0',
+    whereArgs: [surveyLocalId],
+  );
+  print(res);
+  return res.map((e) => SurveyMediaModel.fromMap(e)).toList();
+}
+  Future<int> mediaCunt() async {
+    final db = await database;
+    final result = await db.rawQuery("SELECT COUNT(*) as count FROM survey_media");
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
   Future<void> insertVillage(List<VillageData> list) async {
     final db = await database;
 
@@ -459,8 +743,40 @@ Future<bool> surveyExists(String surveyId) async {
     final db = await instance.database;
     final result = await db.query('surveys');
     print("TOTAL SURVEY ${result.length}");
+    
     return result.map((json) => SurveyModel.fromJsonDB(json)).toList();
   }
+Future<void> printAllSurveys(String surveyID) async {
+  final surveys = await DatabaseHelper.instance.getSurveyMedia(surveyID);
+print(surveys);
+  if (surveys.isEmpty) {
+    print("No surveys found in DB.");
+  } else {
+    for (var survey in surveys) {
+      print("=== Survey ID: ${survey.surveyLocalId} ===");
+      print("Land Pictures:");
+      // for (var media in survey.) {
+        print("  Media ID: ${survey.serverMediaId}");
+        print("  Local Path: ${survey.localPath}");
+        print("  Media Type: ${survey.mediaType}");
+      }
+
+      // print("Survey Forms:");
+      // for (var media in survey.surveyForms) {
+      //   print("  Media ID: ${media.id}");
+      //   print("  Local Path: ${media.localPath}");
+      //   print("  Media Type: ${media.mediaType}");
+      // }
+
+      // print("Consent Forms:");
+      // for (var media in survey.consentForms) {
+      //   print("  Media ID: ${media.id}");
+      //   print("  Local Path: ${media.localPath}");
+      //   print("  Media Type: ${media.mediaType}");
+      // }
+    // }
+  }
+}
 
   Future<List<SurveyModel>> getPendingSurveys() async {
     final db = await instance.database;

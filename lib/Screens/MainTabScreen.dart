@@ -54,18 +54,23 @@ class _MaintabscreenState extends State<Maintabscreen> {
     // TODO: implement initState
     super.initState();
     _selectedIndex = widget.selectedIndex;
-  Future.microtask(() => getData());
+     // 🔥 Background sync (non-blocking)
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final provider = context.read<AppProvider>();
+    provider.backgroundSurveySync();
+  });
+  // Future.microtask(() => getData());
 }
-void getData() async {
-  final provider = context.read<AppProvider>();
+// void getData() async {
+//   final provider = context.read<AppProvider>();
 
-  await provider.fetchLandList();
-  await provider.loadSPendingurveys();
-  await provider.loadCompletedSurveys();
-  await provider.loadSurveys();
+//   // await provider.fetchLandList();
+//   // await provider.loadSPendingurveys();
+//   // await provider.loadCompletedSurveys();
+//   // await provider.loadSurveys();
 
-  setState(() {}); // 🔥 force UI refresh
-}
+//   setState(() {}); // 🔥 force UI refresh
+// }
 
   @override
   Widget build(BuildContext context) {

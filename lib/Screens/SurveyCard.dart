@@ -85,28 +85,7 @@ class SurveyCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Row(
-                //   children: [
-                //     Container(
-                //       width: 12,
-                //       height: 12,
-                //       decoration: BoxDecoration(
-                //         shape: BoxShape.circle,
-                //         color: getStatusColor(statusKey),
-                //       ),
-                //     ),
-                //     SizedBox(
-                //       width: 8,
-                //     ),
-                //     Text(
-                //       status,
-                //       style: TextStyle(
-                //           fontSize: 12,
-                //           fontWeight: FontWeight.w600,
-                //           color: getStatusColor(statusKey)),
-                //     ),
-                //   ],
-                // ),
+               
 
                 surveyListing[index].consentAvailable == 1
                     ? Text(
@@ -130,7 +109,7 @@ class SurveyCard extends StatelessWidget {
                             width: 8,
                           ),
                           Text(
-                            status,
+                            status=="1"?"pending":status=="2"?"Awaiting Approval":status=="3"?"Approved":status=="4"?"Rejected":"pending",
                             style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -414,26 +393,8 @@ class _MoreOptionsMenuState extends State<MoreOptionsMenu> {
       items: [
         PopupMenuItem(
           onTap: () {
-//             Future.delayed(Duration.zero, () async {
-//               final result = await Navigator.of(context).push(
-//                 createSlideFromBottomRoute(
-//                   SurveyDetailForm(
-//                     isEdit: 1,
-//                     surveyListing: widget.surveyListing,
-//                   ),
-//                 ),
-//               );
-//               if (result == true) {
-//                 final provider =
-//                     Provider.of<AppProvider>(context, listen: false);
-//                 provider.loadSPendingurveys();
-//                 provider.refreshDashboard();
-//                 if (result != null && result is SurveyModel) {
-//   // Update survey in provider
-//   // context.read<AppProvider>().updateSurvey(result);
-// }
-//               }
-//             });
+print("IS CLICK ON EDIT");
+print(widget.surveyListing);
             Future.delayed(Duration.zero, () async {
               final result = await Navigator.of(context).push(
                 createSlideFromBottomRoute(
@@ -472,7 +433,7 @@ class _MoreOptionsMenuState extends State<MoreOptionsMenu> {
               showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
                   "Are You Sure want to delete survey from server ? ",
                   () async {
-                provider.deleteLandList(widget.surveyListing!.id!.toString());
+                provider.deleteLandList(widget.surveyListing!.surveyId!.toString());
                 await DatabaseHelper.instance
                     .deleteSurvey(widget.surveyListing!.id!);
                        provider.loadSPendingurveys();
@@ -551,7 +512,10 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
           selectedFiles.addAll(
             result.paths.where((p) => p != null).map(
                   (p) => SurveyMediaModel(
-                    surveyLocalId: widget.surveyListing.id!, // local DB id
+                    surveyLocalId: widget.surveyListing.id!.toString(), // local DB id
+                    serverMediaId: "",
+                    isdeleted: 0,
+                    createdAt: 0,
                     mediaType: _getMediaType(p!),
                     localPath: p,
                     isSynced: 0,

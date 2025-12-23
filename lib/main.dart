@@ -26,7 +26,7 @@ WidgetsFlutterBinding.ensureInitialized();
   
  await   Utility().loadAPIConfig();
   
- // Initialize Workmanager
+ //Initialize Workmanager
 //  await Workmanager().initialize(
 //     callbackDispatcher,
 //     isInDebugMode: true, // prints logs for debugging

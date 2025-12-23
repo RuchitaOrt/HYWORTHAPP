@@ -72,12 +72,13 @@ class APIManager {
     return baseURL!;
   }
  static String createLAndSurvey = "${baseURL!}/land-survey/create";
+  static String updateLAndSurvey = "${baseURL!}/land-survey/update";
   Future<String> apiEndPoint(API api) async {
     var apiPathString = "";
 
     switch (api) {
       case API.signIn:
-        apiPathString = "/api/sign-in";
+        apiPathString = "/sign-in";
         break;
       // case API.landsurveycreate:
       //   apiPathString = "/land-survey/create";
@@ -442,7 +443,7 @@ class APIManager {
  headers = {
   "Accept": "application/json",
   "Content-Type": "application/json",
-  "Cookie":"connect.sid=s%3A2tdDJk7GtxkDgwdGLz5i-8Q3zrIf8Jab.Km0GWJSzt2vY96oF19B8CTleU%2F7HZstVOdCsfSgcMLM",
+   "Cookie":"connect.sid=s%3AYA9IthVONXx3Iov6aE2YT4t8t_Yk_hDP.VxCPhFzppyQd8sWJ3igFvZ2hVCZRM3nJun1J7skNm9g",
   // "connect.sid=s%3AgSI19efiEnYhjoolijN26m12riYa2eKZ.S2qS3TfezzGEqC4DGygygzYb0266Ww9ghvFr%2B07ZAnk",
   // "Authorization": token!,
   // "x-access-token":"$token"

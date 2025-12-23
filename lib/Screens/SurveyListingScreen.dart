@@ -78,6 +78,8 @@ class _SurveyListingScreenState extends State<SurveyListingScreen>
   }
 
   List<SurveyModel> _getFilteredSurveys(List<SurveyModel> surveys) {
+    print("SURVEYLISTINGSCREEN _getFilteredSurveys ${surveys.length}");
+    
     final now = DateTime.now();
     DateTime startDate = DateTime(1970);
 
@@ -240,7 +242,11 @@ switch (_currentFilter) {
                   padding: const EdgeInsets.all(12),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
+                   
                     final survey = filtered[index];
+
+                     print("SURVEYLISTINGSCREEN");
+                     print(survey.landPictures.length);
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: SurveyCard(

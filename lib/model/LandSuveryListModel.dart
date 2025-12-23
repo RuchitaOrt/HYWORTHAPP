@@ -42,7 +42,7 @@ class SurveyData {
   String landLatitude;
   String landLongitude;
   String landAreaInAcres;
-  int landType;
+  String landType;
   String landRateCommercialEscalation;
   String subStationName;
   int subStationDistrictId;
@@ -153,7 +153,7 @@ class SurveyData {
         landLatitude: json['land_latitude'] ?? '',
         landLongitude: json['land_longitude'] ?? '',
         landAreaInAcres: json['land_area_in_acres'] ?? '',
-        landType: json['land_type'] ?? 0,
+        landType: json['land_type'] ?? "",
         landRateCommercialEscalation: json['land_rate_commercial_escalation'] ?? '',
         subStationName: json['sub_station_name'] ?? '',
         subStationDistrictId: json['sub_station_district_id'] ?? 0,

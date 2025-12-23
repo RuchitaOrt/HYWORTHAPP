@@ -27,15 +27,11 @@ Future<void> pickImage(BasicFormProvider provider) async {
   // use image_picker or file_picker
   final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
   if (pickedFile != null) {
-    provider.setImage(File(pickedFile.path));
+    provider.setImage(File(pickedFile.path),0);
   }
 }
 
-  void removeImage(int index,BasicFormProvider basicFormprovider) {
-    setState(() {
-      basicFormprovider.OtherLandmediaFiles[index] = null;
-    });
-  }
+
   @override
   Widget build(BuildContext context) {
     final basicFormProvider = Provider.of<BasicFormProvider>(context);
@@ -142,7 +138,7 @@ GestureDetector(
               top: 8,
               right: 8,
               child: GestureDetector(
-                onTap: () => basicFormProvider.removeImage(),
+                onTap: () => basicFormProvider.removeImage(basicFormProvider.surverID!,basicFormProvider.surveyFormsmediaFile!),
                 child: const CircleAvatar(
                   backgroundColor: CommonColors.grey75,
                   radius: 12,
