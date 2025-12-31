@@ -71,44 +71,35 @@ class APIManager {
   String apiBaseURL() {
     return baseURL!;
   }
- static String createLAndSurvey = "${baseURL!}/land-survey/create";
-  static String updateLAndSurvey = "${baseURL!}/land-survey/update";
+ static String createLAndSurvey = "${baseURL!}/api/land-survey/create";
+  static String updateLAndSurvey = "${baseURL!}/api/land-survey/update";
+  static String uploadConsentSurvey ="${baseURL!}/api/land-survey/upload/consents";
   Future<String> apiEndPoint(API api) async {
     var apiPathString = "";
 
     switch (api) {
       case API.signIn:
-        apiPathString = "/sign-in";
+        apiPathString = "/api/sign-in";
         break;
-      // case API.landsurveycreate:
-      //   apiPathString = "/land-survey/create";
-      //   break;
-      case API.getById:
-        apiPathString = "/land-survey/getById";
-        break;
+   
       case API.landsurveylist:
-        apiPathString = "/land-survey/list";
+        apiPathString = "/api/land-survey/list";
         break;
       case API.landsurveydelete:
-        apiPathString = "/land-survey/delete";
+        apiPathString = "/api/land-survey/delete";
         break;
-      case API.approvalStatusList:
-        apiPathString = "/land-survey/approvalStatusList";
-        break;
-      case API.landsurveyupdate:
-        apiPathString = "/land-survey/update";
-        break;
+   
       case API.states:
-        apiPathString = "/land-survey/states";
+        apiPathString = "/api/land-survey/states";
         break;
          case API.villages:
-        apiPathString = "/land-survey/villages";
+        apiPathString = "/api/land-survey/villages";
         break;
          case API.talukas:
-        apiPathString = "/land-survey/talukas";
+        apiPathString = "/api/land-survey/talukas";
         break;
          case API.districts:
-        apiPathString = "/land-survey/districts";
+        apiPathString = "/api/land-survey/districts";
         break;
       default:
         apiPathString = "/Login";
@@ -250,6 +241,8 @@ class APIManager {
         response =
             await http.post(Uri.parse(url), body: body, headers: headers);
         // .timeout(timeout!);
+print("POST API");
+  
         print(response.body);
       } else if (this.apiHTTPMethod(api) == HTTPMethod.GET) {
         //   print(url);
@@ -293,6 +286,14 @@ class APIManager {
       } else if (response.statusCode == 401) {
         // unAthorizedTokenErrorDialog(context,
         //     message: "Session expired. Please login again.");
+      } else if (response.statusCode == 504) {
+        onFailure(
+    FetchDataError(
+      "Server is temporarily unavailable. Please try again later.",
+    ),
+  );
+        // unAthorizedTokenErrorDialog(context,
+        //     message: "Session expired. Please login again.");
       } else {
         var appError = this.parseError(response);
 
@@ -307,114 +308,6 @@ class APIManager {
       onFailure(appError);
     }
   }
-//  Future<Map<String, dynamic>> apiRequestWithoutContext(API api,
-//     {dynamic jsonval, dynamic path}) async {
-//   final url = await apiEndPoint(api) + (path ?? "");
-//   String? token = await SPManager().getAuthToken();
-
-//   final headers = {
-//     "Accept": "application/json",
-//     "Content-Type": "application/json",
-//     if (token != null && token.isNotEmpty) "Authorization": "Bearer $token"
-//   };
-
-//   final body = jsonval is String ? jsonval : json.encode(jsonval);
-
-//   http.Response response;
-
-//   if (apiHTTPMethod(api) == HTTPMethod.POST) {
-//     response = await http.post(Uri.parse(url), headers: headers, body: body);
-//   } else {
-//     response = await http.get(Uri.parse(url), headers: headers);
-//   }
-
-//   if (response.statusCode == 200) {
-//     return json.decode(response.body);
-//   } else {
-//     throw Exception("HTTP ${response.statusCode}: ${response.body}");
-//   }
-// }
-
-// Future<void> apiRequestDio(
-//   BuildContext context,
-//   API api, {
-//   Map<String, dynamic>? jsonBody,
-//   String? path,
-//   required Function(dynamic) onSuccess,
-//   required Function(dynamic) onFailure,
-// }) async {
-//   try {
-//     // Get token
-//     String? token = await SPManager().getAuthToken();
-//     print("TOKEN: $token");
-
-//     // Base URL
-//     String url = await apiEndPoint(api);
-//     if (path != null) url = "$url$path";
-
-//     print("URL → $url");
-//     print("BODY → $jsonBody");
-
-//     // Configure Dio
-//     Dio dio = Dio(
-//       BaseOptions(
-//         baseUrl: "",
-//         connectTimeout: const Duration(seconds: 15),
-//         receiveTimeout: const Duration(seconds: 15),
-//         headers: {
-//           "Accept": "application/json",
-//           "Content-Type": "application/json",
-
-//           // TRY ALL POSSIBLE TOKEN FORMATS
-//           // Uncomment the one that works with your backend ↓↓↓
-
-//           // 1. Standard Bearer (most common)
-//           "Authorization": "Bearer $token",
-
-//           // 2. Or raw token (if backend expects without Bearer)
-//           // "Authorization": token,
-
-//           // 3. Or token in custom header
-//           // "token": token,
-
-//           // 4. Or x-access-token style
-//           // "x-access-token": token,
-//         },
-//       ),
-//     );
-
-//     Response response = await dio.post(url, data: jsonBody);
-
-//     print("STATUS: ${response.statusCode}");
-//     print("RESPONSE: ${response.data}");
-
-//     // Success (200)
-//     if (response.statusCode == 200) {
-//       final data = response.data;
-
-//       if (data["status"] == true || data["status"] == "success") {
-//         onSuccess(data);
-//       } else {
-//         onFailure(data["message"] ?? "Unknown error");
-//       }
-//       return;
-//     }
-
-//     // Unauthorized
-//     if (response.statusCode == 401) {
-//       unAthorizedTokenErrorDialog(
-//         context,
-//         message: "Session expired. Please login again.",
-//       );
-//       return;
-//     }
-
-//     onFailure("Error ${response.statusCode}");
-//   } catch (e) {
-//     print("DIO ERROR → $e");
-//     onFailure(e.toString());
-//   }
-// }
 
   Future<void> apiRequest(BuildContext context, API api,
       successCallback onSuccess, failureCallback onFailure,
@@ -569,6 +462,7 @@ class APIManager {
       case 403:
         return UnauthorisedError(message);
       case 500:
+      case 504:
       default:
         return FetchDataError(
             'Error occured while Communication with Server with StatusCode : ${response.statusCode}');

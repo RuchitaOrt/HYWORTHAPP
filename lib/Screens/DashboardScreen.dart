@@ -10,6 +10,7 @@ import 'package:hyworth_land_survey/widgets/CommonAppBar.dart';
 import 'package:hyworth_land_survey/widgets/Piechart.dart';
 import 'package:hyworth_land_survey/widgets/SurveyStatsRow.dart';
 import 'package:hyworth_land_survey/widgets/createSlideFromLeftRoute.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -55,9 +56,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ];
 
     _loadSurveyData();
+    
   }
 
   Future<void> _loadSurveyData() async {
+    
+
     final data = await DatabaseHelper.instance
         .getAllSurveysWithCounts(); // no month filter
     setState(() {
@@ -211,7 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       Column(
                         children: [
                           SizedBox(
-                            height: 280,
+                            height: 420,//280,
                             child: PageView.builder(
                               controller: _pageController,
                               itemCount: provider.pendingsurveys.length > 6
@@ -286,6 +290,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildCard(int index, AppProvider provider) {
+    print("calling survey card 2");
     return SurveyCard(
       status: t(context, 'pending'), // dynamic translation for status
       index: index,

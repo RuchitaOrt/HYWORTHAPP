@@ -17,19 +17,24 @@ class SyncService {
     int totalPages = 1;
 
     while (true) {
-      print("Fetching page $page");
+      print("Fetching page state $page");
 
       // API BODY
       final requestBody = {
         "page": page,
         "limit": limit,
       };
+print("Fetching page $requestBody");
+  print("Fetching page state ${API.states}");
 
       var response = await APIManager().apiRequestWithoutContext(
         
         API.states,
         (resp) {
+            print("Fetching page state ${resp}");
           LandStateModel result = resp;
+           print("Fetching page ${API.states}");
+          print("Fetching page state $result");
           final pageData = result.data ?? [];
           allStates.addAll(pageData);
 
@@ -37,7 +42,9 @@ class SyncService {
           totalPages = result.pagination?.totalPages ?? 1;
           print("Fetched ${pageData.length} items from page $page");
         },
-        (err) {},
+        (err) {
+            print("Fetching page state err ${err}");
+        },
         jsonval: requestBody,
       );
 
@@ -74,12 +81,14 @@ class SyncService {
         "page": page,
         "limit": limit,
       };
-
+         print("Fetching page  dis ${API.districts}}");
       var response = await APIManager().apiRequestWithoutContext(
       
         API.districts,
         (resp) {
           LandDistrictModel result = resp;
+  
+   
           final pageData = result.data ?? [];
           allDistricts.addAll(pageData);
 
@@ -124,7 +133,7 @@ class SyncService {
         "page": page,
         "limit": limit,
       };
-
+  print("Fetching page  taluka ${API.talukas}}");
       var response = await APIManager().apiRequestWithoutContext(
        
         API.talukas,
@@ -132,6 +141,7 @@ class SyncService {
            print("API.talukas");
           print(API.talukas);
           LandTalukaModel result = resp;
+         
           final pageData = result.data ?? [];
           allTaluka.addAll(pageData);
 
@@ -141,7 +151,7 @@ class SyncService {
               "Fetched allTaluka ${pageData.length} items from page $page");
         },
         (err) {
-          print("ERROR");
+          print("ERROR in taluka");
           print(err.toString());
         },
         jsonval: requestBody,
@@ -214,7 +224,7 @@ class SyncService {
    await fetchStates();
     await fetchDistricts();
      await fetchTaluka();
-     await fetchVillage();
+    await fetchVillage();
     print("Full sync completed!");
   }
 }

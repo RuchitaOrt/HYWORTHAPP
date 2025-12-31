@@ -1,9 +1,44 @@
   import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hyworth_land_survey/Screens/login_screen.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 
-
+   Future<void> showLoadingDialog(BuildContext context, GlobalKey key,
+      {String message = "Loading, please wait...",
+      bool setForLightScreen = false}) async {
+    Future.delayed(
+      Duration(microseconds: 300),
+      () {
+        showLoadingDialogWithDelay(context, key, message, setForLightScreen);
+      },
+    );
+  }
+     Future<void> showLoadingDialogWithDelay(BuildContext context,
+      GlobalKey key, String message, bool setForLightScreen) async {
+    return showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Material(
+            key: key,
+            type: MaterialType.transparency,
+            child: Center(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                //  CircularProgressIndicator()
+                SpinKitCircle(
+                    color: setForLightScreen ? Colors.black : Colors.white),
+                SizedBox(height: 15),
+                Text(message,
+                    style: TextStyle(
+                        color: setForLightScreen ? Colors.black : Colors.white))
+              ],
+            )),
+          );
+        });
+  }
 Future<bool> showConfirmDialog(BuildContext context,
       String dialogTitle, String dialogMessage, Function() onyes) async {
     bool yesNo = await showDialog(

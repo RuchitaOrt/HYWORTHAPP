@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -6,17 +7,16 @@ import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
 import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Provider/app_provider.dart';
 import 'package:hyworth_land_survey/Screens/MainTabScreen.dart';
+import 'package:hyworth_land_survey/Screens/SurveyForm/AddConsentForm.dart';
 import 'package:hyworth_land_survey/Screens/SurveyForm/SurveyDetailForm.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
 import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
+import 'package:hyworth_land_survey/Utils/SurveySyncValidation.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
-import 'package:hyworth_land_survey/Utils/commonstrings.dart';
 import 'package:hyworth_land_survey/Utils/internetConnection.dart';
-import 'package:hyworth_land_survey/Utils/sizeConfig.dart';
 import 'package:hyworth_land_survey/main.dart';
 import 'package:hyworth_land_survey/model/SurveyModel.dart';
 import 'package:hyworth_land_survey/widgets/createSlideFromLeftRoute.dart';
-import 'package:intl/intl.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -61,6 +61,25 @@ class SurveyCard extends StatelessWidget {
     return entry.key;
   }
 
+  // getMedia(surveyID) async {
+  //   print("BEFORE");
+  //   print(surveyListing[index].consentForms);
+  //   // final mediaList = await DatabaseHelper.instance.getSurveyMedia(surveyID);
+ 
+  //   // final consentForms =
+  //   //     mediaList.where((m) => m.mediaType == 'consent').toList();
+  //   // print(consentForms.length);
+  //   // for(int i=0;i<consentForms.length;i++)
+  //   // {
+  //   //   print(consentForms[i].localPath);
+  //   // }
+  //   // surveyListing[index].consentForms = consentForms;
+    
+
+     
+    
+  // }
+
   @override
   Widget build(BuildContext context) {
     final lang =
@@ -68,7 +87,7 @@ class SurveyCard extends StatelessWidget {
 
 // If your status is already translated (like 'लंबित'), get the key
     final statusKey = getStatusKeyFromText(status, lang);
-
+    // getMedia(surveyListing[index].surveyId);
     return Card(
       color: CommonColors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -85,56 +104,66 @@ class SurveyCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-               
+                // surveyListing[index].consentAvailable == 1
+                //     ? Text(
+                //         "${surveyListing[index].consentForms!.length.toString()} Consent Uploaded",
+                //         style: TextStyle(
+                //             fontSize: 12,
+                //             fontWeight: FontWeight.w600,
+                //             color: getStatusColor(statusKey)),
+                //       )
+                //     :
+
+                Row(
+                  children: [
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: getStatusColor(statusKey),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                    Text(
+                      status,
+                      // status=="1"?"pending":
+                      // status=="2"?"Awaiting Approval":
+                      // status=="3"?"Approved":status=="4"?"Rejected":"pending",
+                      style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: getStatusColor(statusKey)),
+                    ),
+                    SizedBox(
+                      width: 8,
+                    ),
+                  ],
+                ),
 
                 surveyListing[index].consentAvailable == 1
-                    ? Text(
-                        "${surveyListing[index].consentForms!.length.toString()} Consent Uploaded",
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: getStatusColor(statusKey)),
+                    ? MoreOptionsMenu(
+                        selectedIndex: selectedIndex,
+                        status: status,
+                        surveyListing: surveyListing[index],
+                        consentRequired: 1,
                       )
-                    : Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: getStatusColor(statusKey),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 8,
-                          ),
-                          Text(
-                            status=="1"?"pending":status=="2"?"Awaiting Approval":status=="3"?"Approved":status=="4"?"Rejected":"pending",
-                            style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: getStatusColor(statusKey)),
-                          ),
-                          SizedBox(
-                            width: 8,
-                          ),
-                        ],
-                      ),
-                surveyListing[index].consentAvailable == 1
-                    ? GestureDetector(
-                        onTap: () {
-                          _openExpandedView(
-                            context,
-                            surveyListing[index]
-                                .consentForms
-                                .map((path) => File(path.localPath))
-                                .toList(),
-                          );
-                        },
-                        child: Icon(
-                          Icons.remove_red_eye,
-                          color: CommonColors.blue,
-                        ))
+                    // GestureDetector(
+                    //     onTap: () {
+                    //       _openExpandedView(
+                    //         context,
+                    //         surveyListing[index]
+                    //             .consentForms
+                    //             .map((path) => File(path.localPath))
+                    //             .toList(),
+                    //       );
+                    //     },
+                    //     child: Icon(
+                    //       Icons.remove_red_eye,
+                    //       color: CommonColors.blue,
+                    //     ))
                     : MoreOptionsMenu(
                         selectedIndex: selectedIndex,
                         status: status,
@@ -195,7 +224,9 @@ class SurveyCard extends StatelessWidget {
                                   .landRateCommercialEscalation!)),
                     ],
                   ),
+
             const SizedBox(height: 8),
+
             surveyListing[index].consentAvailable == 1
                 ? Container()
                 : Row(
@@ -208,18 +239,46 @@ class SurveyCard extends StatelessWidget {
                       // : "",)),
                     ],
                   ),
-            surveyListing[index].consentAvailable == 1
-                ? Container()
-                : surveyListing[index].surveyStatus == CommonStrings.strRequired
-                    ? Column(
-                        children: [
-                          UploadConsentWidget(
-                            uploadconsent: true,
-                            surveyListing: surveyListing[index],
-                          )
-                        ],
-                      )
-                    : Container()
+            // Text("CONSENT COUNT ${surveyListing[index].consentForms.length}"),
+            FutureBuilder<List<SurveyMediaModel>>(
+  future: DatabaseHelper.instance.getSurveyMedia(
+    surveyListing[index].surveyId!,
+  ),
+  builder: (context, snapshot) {
+    if (!snapshot.hasData) return const SizedBox();
+
+    final consentList =
+        snapshot.data!.where((m) => m.mediaType == 'consent').toList();
+
+    if (consentList.isEmpty) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("TOTAL CONSENT ${consentList.length}"),
+        UploadConsentWidget(
+          uploadconsent: true,
+          surveyListing: surveyListing[index],
+        ),
+      ],
+    );
+  },
+)
+
+            // surveyListing[index].consentAvailable == 1
+            //     ? Container()
+            //     : surveyListing[index].surveyStatus == CommonStrings.strRequired
+            //         ?
+            // surveyListing[index].consentForms.isNotEmpty
+            //     ? Column(
+            //         children: [
+            //           UploadConsentWidget(
+            //             uploadconsent: true,
+            //             surveyListing: surveyListing[index],
+            //           )
+            //         ],
+            //       )
+            //     : Container()
           ],
         ),
       ),
@@ -351,13 +410,14 @@ class MoreOptionsMenu extends StatefulWidget {
   final String status;
   final SurveyModel? surveyListing;
   final int selectedIndex;
+  final int consentRequired;
 
-  const MoreOptionsMenu({
-    super.key,
-    required this.status,
-    required this.surveyListing,
-    required this.selectedIndex,
-  });
+  const MoreOptionsMenu(
+      {super.key,
+      required this.status,
+      required this.surveyListing,
+      required this.selectedIndex,
+      this.consentRequired = 0});
 
   @override
   State<MoreOptionsMenu> createState() => _MoreOptionsMenuState();
@@ -377,7 +437,11 @@ class _MoreOptionsMenuState extends State<MoreOptionsMenu> {
         Provider.of<AppProvider>(context, listen: false).currentLanguage;
     final editLabel = LanguageStrings.languages[lang]?['edit'] ?? 'Edit';
     final deleteLabel = LanguageStrings.languages[lang]?['delete'] ?? 'Delete';
+
     final syncNow = LanguageStrings.languages[lang]?['syncNow'] ?? 'Sync Now';
+
+    final uploadConsent =
+        LanguageStrings.languages[lang]?['upload_consent'] ?? 'Upload Consent';
 
     showMenu(
       context: context,
@@ -390,81 +454,147 @@ class _MoreOptionsMenuState extends State<MoreOptionsMenu> {
       elevation: 8,
       color: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      items: [
-        PopupMenuItem(
-          onTap: () {
-print("IS CLICK ON EDIT");
-print(widget.surveyListing);
-            Future.delayed(Duration.zero, () async {
-              final result = await Navigator.of(context).push(
-                createSlideFromBottomRoute(
-                  SurveyDetailForm(
-                    isEdit: 1,
-                    surveyListing: widget.surveyListing,
-                  ),
+      items: widget.consentRequired == 1
+          ? [
+              PopupMenuItem(
+                onTap: () async {
+                  final result = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => ConsentFormScreen(
+                              SurveyID: widget.surveyListing!.surveyId!,
+                            )),
+                  );
+                },
+                child: Text(uploadConsent),
+              ),
+            ]
+          : [
+              PopupMenuItem(
+                onTap: () {
+     
+                  Future.delayed(Duration.zero, () async {
+                    final result = await Navigator.of(context).push(
+                      createSlideFromBottomRoute(
+                        SurveyDetailForm(
+                          isEdit: 1,
+                          surveyListing: widget.surveyListing,
+                        ),
+                      ),
+                    );
+               
+                    if (result != null) {
+               
+                      // ⚡ update provider
+                      final provider =
+                          Provider.of<AppProvider>(context, listen: false);
+                      provider.loadSPendingurveys();
+                      provider.refreshDashboard();
+
+                      Navigator.of(context).push(
+                        createSlideFromBottomRoute(
+                          Maintabscreen(
+                            selectedIndex: widget.selectedIndex,
+                          ),
+                        ),
+                      );
+                    }
+                  });
+                },
+                child: Text(editLabel),
+              ),
+              PopupMenuItem(
+                onTap: () async {
+                  final provider =
+                      Provider.of<AppProvider>(context, listen: false);
+                  var status1 =
+                      await ConnectionDetector.checkInternetConnection();
+                  if (widget.surveyListing!.serverSynced == 1 && status1) {
+                    showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
+                        "Are You Sure want to delete survey from server and Local ? ",
+                        () async {
+                      provider.deleteLandList(
+                          widget.surveyListing!.surveyId!.toString());
+                      await DatabaseHelper.instance
+                          .deleteSurvey(widget.surveyListing!.id!);
+                      await DatabaseHelper.instance.deleteAllSurveyMedia(
+                          widget.surveyListing!.surveyId!);
+                      provider.loadSPendingurveys();
+                      provider.loadSurveys();
+                      provider.loadConsentSurveys();
+                      provider.refreshDashboard();
+                    });
+                  } else {
+                    showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
+                        "Are You Sure want to delete survey from Local DB ? ",
+                        () async {
+                      await DatabaseHelper.instance
+                          .deleteSurvey(widget.surveyListing!.id!);
+                      await DatabaseHelper.instance.deleteAllSurveyMedia(
+                          widget.surveyListing!.surveyId!);
+                      provider.loadSPendingurveys();
+                      provider.loadSurveys();
+                      provider.loadConsentSurveys();
+                      provider.refreshDashboard();
+                    });
+                  }
+                },
+                child: Text(deleteLabel),
+              ),
+              if (widget.surveyListing!.isReadyForSync() &&
+                  widget.surveyListing!.surveyStatus == "pending")
+                PopupMenuItem(
+                  onTap: () {
+                    Future.delayed(Duration.zero, () async {
+                      final context0 = routeGlobalKey.currentContext!;
+
+                      var status1 =
+                          await ConnectionDetector.checkInternetConnection();
+                      final basicFormProvider = Provider.of<BasicFormProvider>(
+                          context0,
+                          listen: false);
+                      final provider =
+                          Provider.of<AppProvider>(context0, listen: false);
+
+                      if (!status1) {
+                        showToast("No Internet Connection");
+                        return;
+                      }
+
+                      // 🔄 SHOW LOADER
+                      showLoader(context0, text: "Syncing survey...");
+
+                      try {
+                        if (widget.surveyListing!.serverSynced == 1) {
+                          await basicFormProvider.updateMultipleLandSurvey(
+                            widget.surveyListing!,
+                            widget.surveyListing!.id!,
+                          );
+                        } else {
+                          await basicFormProvider.submitMultipleLandSurvey(
+                            widget.surveyListing!,
+                          );
+                        }
+
+                        await provider.loadSPendingurveys();
+                        await provider.loadSurveys();
+                        await provider.loadConsentSurveys();
+                        await provider.refreshDashboard();
+                      } catch (e) {
+                        showToast("Sync failed");
+                      } finally {
+                        // ❌ CLOSE LOADER
+                        Navigator.pop(context0);
+                      }
+                    });
+                  },
+                  child: Text(syncNow),
                 ),
-              );
-              print("BACK");
-              if (result != null) {
-                print("BACK");
-                // ⚡ update provider
-                final provider =
-                    Provider.of<AppProvider>(context, listen: false);
-                provider.loadSPendingurveys();
-                provider.refreshDashboard();
 
-                Navigator.of(context).push(
-                  createSlideFromBottomRoute(
-                    Maintabscreen(
-                      selectedIndex: widget.selectedIndex,
-                    ),
-                  ),
-                );
-              }
-            });
-          },
-          child: Text(editLabel),
-        ),
-        PopupMenuItem(
-          onTap: () async {
-            final provider = Provider.of<AppProvider>(context, listen: false);
-            var status1 = await ConnectionDetector.checkInternetConnection();
-            if (widget.surveyListing!.serverSynced == 1 && status1) {
-              showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
-                  "Are You Sure want to delete survey from server ? ",
-                  () async {
-                provider.deleteLandList(widget.surveyListing!.surveyId!.toString());
-                await DatabaseHelper.instance
-                    .deleteSurvey(widget.surveyListing!.id!);
-                       provider.loadSPendingurveys();
-            provider.loadSurveys();
-            provider.loadConsentSurveys();
-            provider.refreshDashboard();
-              });
-              
-            } else {
-              showConfirmDialog(routeGlobalKey.currentContext!, "DELETE",
-                  "Are You Sure want to delete survey from Local DB ? ",
-                  () async {
-                await DatabaseHelper.instance
-                    .deleteSurvey(widget.surveyListing!.id!);
-                       provider.loadSPendingurveys();
-            provider.loadSurveys();
-            provider.loadConsentSurveys();
-            provider.refreshDashboard();
-              });
-           
-            }
-
-         
-          },
-          child: Text(deleteLabel),
-        ),
-        // PopupMenuItem(
-        //   onTap: () async {},
-        //   child: Text(syncNow),
-        // ),
-      ],
+              // PopupMenuItem(
+              //   onTap: () async {},
+              //   child: Text(syncNow),
+              // ),
+            ],
     );
   }
 
@@ -474,6 +604,26 @@ print(widget.surveyListing);
       key: _iconKey,
       onTap: _showCustomMenu,
       child: const Icon(Icons.more_vert, color: CommonColors.blue),
+    );
+  }
+
+  void showLoader(BuildContext context, {String text = "Syncing..."}) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(text)),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -497,38 +647,122 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
     if (ext == 'pdf') return 'pdf';
     return 'file';
   }
+Future<void> _pickFiles() async {
+  final storageGranted = await Permission.storage.request().isGranted ||
+      await Permission.photos.request().isGranted;
 
-  Future<void> _pickFiles() async {
-    if (await Permission.storage.request().isGranted ||
-        await Permission.photos.request().isGranted) {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-      );
-
-      if (result != null) {
-        setState(() {
-          selectedFiles.addAll(
-            result.paths.where((p) => p != null).map(
-                  (p) => SurveyMediaModel(
-                    surveyLocalId: widget.surveyListing.id!.toString(), // local DB id
-                    serverMediaId: "",
-                    isdeleted: 0,
-                    createdAt: 0,
-                    mediaType: _getMediaType(p!),
-                    localPath: p,
-                    isSynced: 0,
-                  ),
-                ),
-          );
-        });
-      }
-      _openExpandedView();
-    } else {
-      print("Permission denied");
-    }
+  if (!storageGranted) {
+    showToast("Storage permission denied");
+    return;
   }
+
+  FilePickerResult? result = await FilePicker.platform.pickFiles(
+    allowMultiple: true,
+    type: FileType.custom,
+    allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+  );
+
+  if (result == null) return;
+
+  // 🔹 Convert picked files → SurveyMediaModel
+  final newMedia = result.paths
+      .where((p) => p != null)
+      .map(
+        (p) => SurveyMediaModel(
+          surveyLocalId: widget.surveyListing.surveyId!,
+          serverMediaId: "",
+          isdeleted: 0,
+          createdAt: DateTime.now().millisecondsSinceEpoch,
+          mediaType: 'consent', // 🔥 ALWAYS consent here
+          localPath: p!,
+          isSynced: 0,
+        ),
+      )
+      .toList();
+
+  // 🔹 Update UI immediately
+  setState(() {
+    selectedFiles.addAll(newMedia);
+  });
+
+  // 🔹 Persist ONLY in survey_media table
+  await DatabaseHelper.instance.insertSurveyMediaList(
+    surveyLocalId: widget.surveyListing.surveyId!,
+    landPictures: [],
+    surveyForms: [],
+    consentForms: newMedia,
+  );
+
+  // 🔹 Open preview
+  _openExpandedView();
+}
+
+//   Future<void> _pickFiles() async {
+//     if (await Permission.storage.request().isGranted ||
+//         await Permission.photos.request().isGranted) {
+//       FilePickerResult? result = await FilePicker.platform.pickFiles(
+//         allowMultiple: true,
+//         type: FileType.custom,
+//         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+//       );
+
+//       if (result != null) {
+//         setState(() {
+//           selectedFiles.addAll(
+//             result.paths.where((p) => p != null).map(
+//                   (p) => SurveyMediaModel(
+//                     surveyLocalId:
+//                         widget.surveyListing.surveyId!.toString(), // local DB id
+//                     serverMediaId: "",
+//                     isdeleted: 0,
+//                     createdAt: 0,
+//                     mediaType: _getMediaType(p!),
+//                     localPath: p,
+//                     isSynced: 0,
+//                   ),
+//                 ),
+//           );
+
+//           widget.surveyListing.consentForms != selectedFiles;
+// print("selectedFiles${selectedFiles.length}");
+   
+//         });
+
+        
+
+//         await DatabaseHelper.instance.insertSurveyMediaList(
+//           surveyLocalId: widget.surveyListing.surveyId!.toString(),
+
+//           landPictures: [], //landPictures,
+
+//           surveyForms: [], //surveyForms,
+
+//           consentForms: selectedFiles, // not available at creation time
+//         );
+        
+//         final List<String> consentPaths =
+//             selectedFiles.map((file) => file.localPath).toList();
+
+//         final String pathsJson = jsonEncode(consentPaths);
+
+//         final rows = await DatabaseHelper.instance.updateConsentFormBySurveyId(
+//           surveyId: widget.surveyListing.surveyId!.toString(),
+//           consentFormsJson: pathsJson,
+//         );
+// final provider = context.read<AppProvider>();
+// await provider.refreshConsentForSurvey(widget.surveyListing.surveyId!.toString());
+//         if (rows > 0) {
+//           print("✅ Consent form updated");
+//         }
+// //           await DatabaseHelper.instance.updateSurveyConsentForm(consentForm: selectedFiles,
+// //           surveyId: widget.surveyListing.id!.toString(),
+// // );
+//       }
+//       _openExpandedView();
+//     } else {
+//       print("Permission denied");
+//     }
+//   }
 
   void _openFile(File file) {
     OpenFilex.open(file.path);
@@ -659,112 +893,12 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
                             ),
                           ),
                           onPressed: () async {
-                            SurveyModel survey = SurveyModel(
-                              surveyId:
-                                  widget.surveyListing!.surveyId.toString() ??
-                                      "", // never null
-                              userId: "1",
-                              landState: widget.surveyListing.landState ?? "",
-                              landDistrict:
-                                  widget.surveyListing.landDistrict ?? "",
-                              landTaluka: widget.surveyListing.landTaluka ?? "",
-                              landVillage:
-                                  widget.surveyListing.landVillage ?? "",
-                              landLatitude: double.parse(widget
-                                  .surveyListing!.landLatitude!
-                                  .toString()),
-                              landLongitude: double.parse(widget
-                                  .surveyListing.landLongitude
-                                  .toString()),
-                              landAreaInAcres:
-                                  widget.surveyListing.landAreaInAcres ?? "",
-                              landType: widget.surveyListing.landType ?? "",
-                              landRateCommercialEscalation: widget.surveyListing
-                                      .landRateCommercialEscalation ??
-                                  "",
-                              subStationName:
-                                  widget.surveyListing.subStationName ?? "",
-                              subStationDistrict:
-                                  widget.surveyListing.subStationDistrict ?? "",
-                              subStationTaluka:
-                                  widget.surveyListing.subStationTaluka ?? "",
-                              subStationVillage:
-                                  widget.surveyListing.subStationVillage ?? "",
-                              subStationLatitude: double.parse(widget
-                                  .surveyListing.subStationLatitude
-                                  .toString()),
-                              subStationLongitude: double.parse(widget
-                                  .surveyListing.subStationLongitude
-                                  .toString()),
-                              inchargeName:
-                                  widget.surveyListing.inchargeName ?? "",
-                              subStationInchargeContact: widget.surveyListing
-                                      .subStationInchargeContact ??
-                                  "",
-                              operatorName:
-                                  widget.surveyListing.operatorName ?? "",
-                              operatorContact:
-                                  widget.surveyListing.operatorContact ?? "",
-                              subStationVoltageLevel:
-                                  widget.surveyListing.subStationVoltageLevel ??
-                                      "",
-                              subStationCapacity:
-                                  widget.surveyListing.subStationCapacity ?? "",
-                              distanceSubStationToLand: widget
-                                      .surveyListing.distanceSubStationToLand ??
-                                  "",
-                              plotDistanceFromMainRoad: widget
-                                      .surveyListing.plotDistanceFromMainRoad ??
-                                  "",
-                              evacuationLevel:
-                                  widget.surveyListing.evacuationLevel ?? "",
-                              windZone: widget.surveyListing.windZone ?? "",
-                              groundWaterRainFall:
-                                  widget.surveyListing.groundWaterRainFall ??
-                                      "",
-                              soilType: widget.surveyListing.soilType ?? "",
-                              nearestHighway:
-                                  widget.surveyListing.nearestHighway ?? "",
-                              surveyForms:
-                                  widget.surveyListing.surveyForms!.isNotEmpty
-                                      ? widget.surveyListing.surveyForms
-                                      : [],
-                              landPictures:
-                                  widget.surveyListing.landPictures!.isNotEmpty
-                                      ? widget.surveyListing.landPictures!
-                                      : [],
-                              isSurveyapproved: 0,
-                              consentAvailable: 1,
-                              isSync: 0,
-                              selectedLanguage: Provider.of<AppProvider>(
-                                      context,
-                                      listen: false)
-                                  .currentLanguage,
-                              surveyDate: widget.surveyListing!.surveyDate,
-                              updatedsurveyDate:
-                                  DateTime.now().millisecondsSinceEpoch,
-                              surveyStatus: CommonStrings.strRequired,
-                              consentForms: selectedFiles
-                                  .where((file) =>
-                                      file != null) // keep only non-null
-                                  .map((file) => file) // extract paths
-                                  .toList(),
-                            );
-                            print(
-                                "Survey : ${widget.surveyListing!.id.toString()}");
-
-                            final updatedRows = await DatabaseHelper.instance
-                                .updateSurvey(
-                                    survey, widget.surveyListing!.id!);
-                            print("Survey : ${survey.surveyId}");
-                            print("Survey : ${survey.isSurveyapproved}");
-                            if (updatedRows > 0) {
-                              print("✅ Survey updated successfully");
-                            } else {
-                              print("⚠️ No survey found to update");
-                            }
-                            context.read<AppProvider>().loadSurveys();
-                            Navigator.pop(context, true);
+                            final basicFormProvider =
+                                Provider.of<BasicFormProvider>(context,
+                                    listen: false);
+                      
+                            basicFormProvider.uploadConsentLandSurvey(
+                                selectedFiles, widget.surveyListing.surveyId!);
                           },
                           child: Text(
                             "Upload",
@@ -786,15 +920,25 @@ class _UploadConsentWidgetState extends State<UploadConsentWidget> {
     );
   }
 
-  void loadDbFiles() {
-    final dbFiles = widget.surveyListing.consentForms;
+  // void loadDbFiles() {
+  //   final dbFiles = widget.surveyListing.consentForms;
 
-    if (dbFiles != null && dbFiles.isNotEmpty) {
-      setState(() {
-        selectedFiles.addAll(dbFiles);
-      });
-    }
-  }
+  //   if (dbFiles != null && dbFiles.isNotEmpty) {
+  //     setState(() {
+  //       selectedFiles.addAll(dbFiles);
+  //     });
+  //   }
+  // }
+Future<void> loadDbFiles() async {
+  final media = await DatabaseHelper.instance
+      .getSurveyMedia(widget.surveyListing.surveyId!);
+
+  final consent = media.where((m) => m.mediaType == 'consent').toList();
+
+  setState(() {
+    selectedFiles = consent;
+  });
+}
 
   // void loadDbFiles() {
   //   if (widget.surveyListing.consentForms != null) {

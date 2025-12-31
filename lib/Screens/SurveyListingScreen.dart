@@ -17,7 +17,7 @@ enum SurveyFilter {
   thisMonth,
   thisYear,
   pending,
-  awaitConfirmation,
+  AwaitingApproval,
   requiredConsent
 }
 
@@ -51,11 +51,14 @@ class _SurveyListingScreenState extends State<SurveyListingScreen>
     color: CommonColors.blue,
     width: 1.0,
   );
+  late FocusNode _searchFocusNode;
+
   @override
   void initState() {
     super.initState();
     context.read<AppProvider>().loadSurveys(); // initial load
     _searchController.addListener(() => setState(() {}));
+    _searchFocusNode = FocusNode();
   }
 
   @override
@@ -68,6 +71,7 @@ class _SurveyListingScreenState extends State<SurveyListingScreen>
   void dispose() {
     routeObserver.unsubscribe(this);
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -78,8 +82,8 @@ class _SurveyListingScreenState extends State<SurveyListingScreen>
   }
 
   List<SurveyModel> _getFilteredSurveys(List<SurveyModel> surveys) {
-    print("SURVEYLISTINGSCREEN _getFilteredSurveys ${surveys.length}");
-    
+  
+
     final now = DateTime.now();
     DateTime startDate = DateTime(1970);
 
@@ -117,29 +121,28 @@ class _SurveyListingScreenState extends State<SurveyListingScreen>
           (s.landVillage?.toLowerCase().contains(searchText) ?? false);
 
       // 🧠 Handle status filters
-     // 🧠 Handle status filters
-bool matchesStatus = true;
-final status = s.surveyStatus?.toLowerCase().trim();
-
-switch (_currentFilter) {
-  case SurveyFilter.pending:
-    matchesStatus = status == 'pending';
-    break;
-  case SurveyFilter.awaitConfirmation:
-    matchesStatus = status == 'await confirmation';
-    break;
-  case SurveyFilter.requiredConsent:
-    matchesStatus = status == 'required consent';
-    break;
-  default:
-    break;
-}
-
-
+      // 🧠 Handle status filters
+      bool matchesStatus = true;
+     
+      final status = s.surveyStatus?.toLowerCase().trim();
+     
+      switch (_currentFilter) {
+        case SurveyFilter.pending:
+          matchesStatus = status == 'pending';
+          break;
+        case SurveyFilter.AwaitingApproval:
+          matchesStatus = status == 'awaiting approval';
+          break;
+        case SurveyFilter.requiredConsent:
+          matchesStatus = status == 'required consent';
+          break;
+        default:
+          break;
+      }
+     
       return matchesDate && matchesSearch && matchesStatus;
     }).toList();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,6 +162,7 @@ switch (_currentFilter) {
                   child: Container(
                     height: 41,
                     child: TextField(
+                      focusNode: _searchFocusNode,
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintStyle: CommonStyles.textFieldHint,
@@ -193,14 +197,13 @@ switch (_currentFilter) {
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () async {
-                    // final result = await showTimeFilterDialogSingle(
-                    //   context,
-                    //   initialSelection: _currentFilters.first,
-                    // );
-                    // if (result != null) setState(() => _currentFilters = {result});
+                    _searchFocusNode.unfocus();
+                    FocusManager.instance.primaryFocus?.unfocus();
+                
                     final result =
                         await showSurveyFilterDialog(context, _currentFilter);
                     if (result != null) setState(() => _currentFilter = result);
+                  
                   },
                   child: SvgPicture.asset(CommonImagePath.filter,
                       width: 30, height: 30, color: CommonColors.blue),
@@ -242,15 +245,14 @@ switch (_currentFilter) {
                   padding: const EdgeInsets.all(12),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
-                   
+                  
                     final survey = filtered[index];
 
-                     print("SURVEYLISTINGSCREEN");
-                     print(survey.landPictures.length);
+                  print("calling survey card consentForms ${survey.consentForms.length}");
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: SurveyCard(
-                        surveyListing:filtered,//17dec
+                        surveyListing: filtered, //17dec
                         index: index,
                         status: survey.surveyStatus ?? "",
                         uploadconsent: false,
@@ -295,13 +297,12 @@ switch (_currentFilter) {
                   case SurveyFilter.pending:
                     label = "Pending";
                     break;
-                 case SurveyFilter.awaitConfirmation:
-  label = "Await Confirmation";
-  break;
-case SurveyFilter.requiredConsent:
-  label = "Required Consent";
-  break;
-
+                  case SurveyFilter.AwaitingApproval:
+                    label = "awaiting approval";
+                    break;
+                  case SurveyFilter.requiredConsent:
+                    label = "Required Consent";
+                    break;
                 }
 
                 return RadioListTile<SurveyFilter>(

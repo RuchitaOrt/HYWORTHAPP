@@ -42,13 +42,14 @@ class SurveyModel {
       isSurveyapproved; //means that is sync with admin and not in awaited confirmation
   final int? isSync;
   final int? serverSynced;
+  final int? needSynced;
   // final List<String>? landPictures;
   // final List<String>? surveyForms;
   // final List<String>? consentForms;
 
   final List<SurveyMediaModel> landPictures;
   final List<SurveyMediaModel> surveyForms;
-  final List<SurveyMediaModel> consentForms;
+   List<SurveyMediaModel> consentForms;
 
   final String? selectedLanguage;
   final int? surveyDate;
@@ -103,6 +104,7 @@ class SurveyModel {
     this.consentAvailable,
     this.isSurveyapproved,
     this.serverSynced,
+    this.needSynced,
     required this.landPictures,
     required this.surveyForms,
     required this.consentForms,
@@ -165,6 +167,7 @@ class SurveyModel {
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
         "serverSynced": serverSynced,
+        "needSynced":needSynced,
         "landPictures": landPictures,
         "surveyForms": surveyForms,
         "selectedLanguage": selectedLanguage,
@@ -223,6 +226,7 @@ class SurveyModel {
         "isSurveyapproved": isSurveyapproved,
         "isSync": isSync,
         "serverSynced": serverSynced,
+        "needSynced":needSynced,
         'landPictures': jsonEncode(
           landPictures.map((e) => e.localPath).toList(),
         ),
@@ -293,6 +297,11 @@ class SurveyModel {
       consentAvailable: json["consentAvailable"],
       isSync: json["isSync"],
       serverSynced: json["serverSynced"],
+      // needSynced:json['needSynced'],
+      needSynced: json['needSynced'] is int
+    ? json['needSynced']
+    : int.tryParse(json['needSynced']?.toString() ?? '0') ?? 0,
+
       isSurveyapproved: json["isSurveyapproved"],
       // landPictures: List<SurveyMediaModel>.from(jsonDecode(json["landPictures"] ?? '[]')),
       // surveyForms: List<SurveyMediaModel>.from(jsonDecode(json["surveyForms"] ?? '[]')),
@@ -370,6 +379,7 @@ class SurveyModel {
 
     isSync: isSync ?? this.isSync,
     serverSynced: serverSynced ?? this.serverSynced,
+    needSynced:needSynced ?? this.needSynced,
     isSurveyapproved: isSurveyapproved ?? this.isSurveyapproved,
 
     // KEEP existing values

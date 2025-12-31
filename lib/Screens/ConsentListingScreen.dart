@@ -236,6 +236,7 @@ List<SurveyModel> _getFilteredConsentSurveys(List<SurveyModel> surveys) {
 }
 
   Widget _buildCard(int index, String status,List<SurveyModel> consentSurveys) {
+    print("calling survey card 1");
     return SurveyCard(
       surveyListing: consentSurveys,
       index: index,

@@ -302,28 +302,7 @@ await getAppVersion(context);
   }else{
     signInProvider.createSignIn();
   }
-                        //                      if (signInProvider.validateForm()) {
-                        //   // Proceed with form submission
-                        //    print("Login");
-                        //   signInProvider.createSignIn();
-                        // } else {
-                        //    print("Not valid Login");
-                        //   // Form is invalid, show error messages
-                        // }
-                                              // final surveyProvider =
-                                              //     Provider.of<AppProvider>(
-                                              //         context,
-                                              //         listen: false);
-                                              // await surveyProvider.loadSPendingurveys();
-                                              // await surveyProvider.loadCompletedSurveys();
-                                              //  await surveyProvider.loadSurveys();
-                                              // final result =
-                                              //     await Navigator.of(context)
-                                              //         .push(
-                                              //   createSlideFromBottomRoute(
-                                              //     Maintabscreen(),
-                                              //   ),
-                                              // );
+                      
                                             }
                                           : null,
                                       child: Text(

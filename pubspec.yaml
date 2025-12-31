@@ -62,6 +62,8 @@ dependencies:
   workmanager:
   dio: 
   path_provider:
+  flutter_spinkit: 
+  flutter_local_notifications: 
 
   
   # flutter_google_places: ^0.3.0

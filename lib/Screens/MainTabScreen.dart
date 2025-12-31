@@ -96,7 +96,7 @@ class _MaintabscreenState extends State<Maintabscreen> {
               label: 'Add Consent',
               onTap: () async {
                 final result = await Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ConsentFormScreen()),
+                  MaterialPageRoute(builder: (_) => ConsentFormScreen(SurveyID: "",)),
                 );
 
                 if (result == true) {

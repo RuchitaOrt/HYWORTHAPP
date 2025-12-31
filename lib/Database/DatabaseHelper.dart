@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:hyworth_land_survey/Utils/GlobalLists.dart';
 import 'package:hyworth_land_survey/model/LandDistrictModel.dart';
@@ -38,8 +39,15 @@ class DatabaseHelper {
     return await db.rawQuery(sql, args);
   }
 
-
-
+Future<List<SurveyModel>> getSurveysNeedingSync() async {
+  final db = await DatabaseHelper.instance.database;
+  final res = await db.query(
+    'survey',
+    where: 'needSynced = ?',
+    whereArgs: [1],
+  );
+  return res.map((e) => SurveyModel.fromJsonDB(e)).toList();
+}
   Future _createDB(Database db, int version) async {
     // await db.execute('DROP TABLE IF EXISTS surveys');
     await db.execute('''
@@ -83,6 +91,7 @@ class DatabaseHelper {
         consentAvailable INTEGER,
         isSync INTEGER,
         serverSynced INTEGER,
+        needSynced INTEGER,
         isSurveyapproved INTEGER,
         selectedLanguage TEXT,
         landPictures TEXT,  -- stored as JSON string
@@ -100,7 +109,6 @@ class DatabaseHelper {
         substationVillageID TEXT
       )
     ''');
-
 
     await db.execute('''
   CREATE TABLE survey_media (
@@ -168,338 +176,222 @@ class DatabaseHelper {
   lastSeq INTEGER
 );
 ''');
-
   }
-Future<void> insertSurveyMedia({
-  required int surveyLocalId,
-  required String file,
-  required String mediaType,
-}) async {
-  final db = await database;
 
-  await db.insert('survey_media', {
-    'survey_local_id': surveyLocalId,
-    'server_media_id': null,
-    'media_type': mediaType, // land / survey / consent
-    'local_path': file,
-    'is_synced': 0,
-    'is_deleted': 0,
-    'created_at': DateTime.now().millisecondsSinceEpoch,
-  });
-}
-// Future<int> insertSurveyMediaList({
-//   required String surveyLocalId, // keep as String now
-//   List<SurveyMediaModel>? landPictures,
-//   List<SurveyMediaModel>? surveyForms,
-//   List<SurveyMediaModel>? consentForms,
-// }) async {
-//   final db = await database;
-//   int totalInserted = 0;
+  Future<void> insertSurveyMedia({
+    required int surveyLocalId,
+    required String file,
+    required String mediaType,
+  }) async {
+    final db = await database;
 
-//   // Example for landPictures
-//   if (landPictures != null) {
-//     for (var media in landPictures) {
-//       totalInserted += await db.insert('survey_media', media.toMap());
-//     }
-//   }
-
-//   // Example for surveyForms
-//   if (surveyForms != null) {
-//     for (var media in surveyForms) {
-//       totalInserted += await db.insert('survey_media', media.toMap());
-//     }
-//   }
-
-//   // Example for consentForms
-//   if (consentForms != null) {
-//     for (var media in consentForms) {
-//       totalInserted += await db.insert('survey_media', media.toMap());
-//     }
-//   }
-
-//   return totalInserted; // returns total number of rows inserted
-// }
-
-Future<bool> mediaExists({
-  required String surveyLocalId,
-  required String mediaType,
-  required String localPath,
-}) async {
-  final db = await database;
-  final result = await db.query(
-    'survey_media',
-    where:
-        'survey_local_id = ? AND media_type = ? AND local_path = ? AND is_deleted = 0',
-    whereArgs: [surveyLocalId, mediaType, localPath],
-    limit: 1,
-  );
-  return result.isNotEmpty;
-}
-
-Future<int> insertSurveyMediaList({
-  required String surveyLocalId,
-  List<SurveyMediaModel>? landPictures,
-  List<SurveyMediaModel>? surveyForms,
-  List<SurveyMediaModel>? consentForms,
-}) async {
-  final db = await database;
-  int totalInserted = 0;
-   print("INSERT SURVEY MEDIA");
- print(landPictures!.length.toString());
- Future<void> addMedia(List<SurveyMediaModel>? files, String type) async {
-  if (files == null || files.isEmpty) return;
-
-  for (final file in files) {
-
-    final map = {
-      'survey_local_id': file.surveyLocalId,
-      'server_media_id': file.serverMediaId,
-      'media_type': type,
-      'local_path': file.localPath,
-      'is_synced': file.isSynced,
+    await db.insert('survey_media', {
+      'survey_local_id': surveyLocalId,
+      'server_media_id': null,
+      'media_type': mediaType, // land / survey / consent
+      'local_path': file,
+      'is_synced': 0,
       'is_deleted': 0,
-      'created_at': file.createdAt,
-    };
-
-    print("📝Map media value before inserting:  $map");
-
-    // ✅ INSERT ONCE
-    // final insertedId = await db.insert('survey_media', map);
-    final insertedId = await db.insert(
-  'survey_media',
-  map,
-  conflictAlgorithm: ConflictAlgorithm.ignore,
-);
-
-if (insertedId == 0) {
-  print("⏭ Duplicate ignored: ${file.localPath}");
-} else {
-  print("✅ Inserted: ${file.localPath}");
-}
-
-     print("RANGAMEDIA ${insertedId}");
-    // 🔑 VERY IMPORTANT
-    // Save DB ID back into model so next save won't duplicate
-    // file.id = insertedId;
-
-    totalInserted++;
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    });
   }
-}
+  
 
-  await addMedia(landPictures, 'land');
-  await addMedia(surveyForms, 'survey');
-  await addMedia(consentForms, 'consent');
+  Future<int> insertSurveyMediaList({
+    required String surveyLocalId,
+    List<SurveyMediaModel>? landPictures,
+    List<SurveyMediaModel>? surveyForms,
+    List<SurveyMediaModel>? consentForms,
+  }) async {
+    final db = await database;
+    int totalInserted = 0;
+    print("INSERT SURVEY MEDIA");
+    print(landPictures!.length.toString());
+    Future<void> addMedia(List<SurveyMediaModel>? files, String type) async {
+      if (files == null || files.isEmpty) return;
 
-  print("✅ Total rows inserted: $totalInserted");
-  return totalInserted;
-}
+      for (final file in files) {
+        final map = {
+          'survey_local_id': file.surveyLocalId,
+          'server_media_id': file.serverMediaId,
+          'media_type': type,
+          'local_path': file.localPath,
+          'is_synced': file.isSynced,
+          'is_deleted': 0,
+          'created_at': file.createdAt,
+        };
 
-// Future<int> insertSurveyMediaList({
-//   required String surveyLocalId, // keep as String
-//   List<SurveyMediaModel>? landPictures,
-//   List<SurveyMediaModel>? surveyForms,
-//   List<SurveyMediaModel>? consentForms,
-// }) async {
-//   final db = await database;
-//   int totalInserted = 0;
+        print("📝Map media value before inserting:  $map");
 
-//   // Make this function async so we can await db.insert
-//   Future<void> addMedia(List<SurveyMediaModel>? files, String type) async {
-//     if (files == null) return;
-//     for (var file in files) {
-//       final map = {
-//         'survey_local_id': surveyLocalId,
-//         'server_media_id': file.serverMediaId,
-//         'media_type': type,
-//         'local_path': file.localPath,
-//         'is_synced': 0,
-//         'is_deleted': 0,
-//         'created_at': DateTime.now().millisecondsSinceEpoch,
-//       };
+        // ✅ INSERT ONCE
+        // final insertedId = await db.insert('survey_media', map);
+        final insertedId = await db.insert(
+          'survey_media',
+          map,
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
 
-//       print("📝 Inserting media: $map");
-//       totalInserted += await db.insert('survey_media', map); // ✅ await here
-//     }
-//   }
+        if (insertedId == 0) {
+          print("⏭ Duplicate ignored: ${file.localPath}");
+        } else {
+          print("✅ Inserted: ${file.localPath}");
+        }
 
-//   await addMedia(landPictures, 'land');
-//   await addMedia(surveyForms, 'survey');
-//   await addMedia(consentForms, 'consent');
+        print("RANGAMEDIA ${insertedId}");
+        // 🔑 VERY IMPORTANT
+        // Save DB ID back into model so next save won't duplicate
+        // file.id = insertedId;
 
-//   print("✅ Total rows inserted: $totalInserted");
-//   return totalInserted;
-// }
-Future<int> deleteSurveyMedia({
-  required String surveyLocalId,
-  required String localPath,
-}) async {
-  final db = await database;
+        totalInserted++;
+      }
+    }
 
-  final rows = await db.delete(
-    'survey_media',
-    where: 'survey_local_id = ? AND local_path = ?',
-    whereArgs: [surveyLocalId, localPath],
-  );
+    await addMedia(landPictures, 'land');
+    await addMedia(surveyForms, 'survey');
+    await addMedia(consentForms, 'consent');
 
-  print("🗑 Deleted rows: $rows");
-  return rows;
-}
+    print("✅ Total rows inserted: $totalInserted");
+    return totalInserted;
+  }
+ 
+  Future<int> deleteSurveyMedia({
+    required String surveyLocalId,
+    required String localPath,
+  }) async {
+    final db = await database;
 
+    final rows = await db.delete(
+      'survey_media',
+      where: 'survey_local_id = ? AND local_path = ?',
+      whereArgs: [surveyLocalId, localPath],
+    );
+
+    print("🗑 Deleted rows: $rows");
+    return rows;
+  }
 Future<int> hardDeleteSurveyMediaByServerId({
   required String surveyLocalId,
- 
 }) async {
   final db = await database;
 
   final rows = await db.delete(
     'survey_media',
-    where: '''
-      survey_local_id = ?
-    
-    ''',
+    where: 'survey_local_id = ? AND media_type IN (?, ?)',
     whereArgs: [
       surveyLocalId,
+      'land',
+      'survey',
+    ],
+  );
+
+  print("🗑 HARD deleted rows (land + survey): $rows");
+  return rows; // number of rows deleted
+}
+Future<int> hardDeleteConsentMediaByServerId({
+  required String surveyLocalId,
+}) async {
+  final db = await database;
+
+  final rows = await db.delete(
+    'survey_media',
+    where: 'survey_local_id = ? AND media_type IN (?)',
+    whereArgs: [
+      surveyLocalId,
+      'consent',
       
     ],
   );
 
-  print("🗑 HARD deleted rows: $rows ");
-  return rows;
+  print("🗑 HARD deleted rows (consent): $rows");
+  return rows; // number of rows deleted
 }
+ 
 
+  Future<int> getSurveyMediaCount(String surveyLocalId) async {
+    final db = await database;
 
-Future<int> upsertSurveyMediaList({
-  required String surveyLocalId,
-  List<SurveyMediaModel> landPictures = const [],
-  List<SurveyMediaModel> surveyForms = const [],
-  List<SurveyMediaModel> consentForms = const [],
-}) async {
-  final db = await database;
-  int totalAffected = 0;
+    final result = await db.rawQuery(
+      '''
+    SELECT COUNT(*) as count
+    FROM survey_media
+    WHERE survey_local_id = ?
+    ''',
+      [surveyLocalId],
+    );
 
-  Future<void> upsert(List<SurveyMediaModel> files, String type) async {
-    for (final file in files) {
-      final existing = await db.query(
-        'survey_media',
-        where: 'survey_local_id = ? AND server_media_id = ?',
-        whereArgs: [surveyLocalId, file.serverMediaId],
-      );
+    final count = Sqflite.firstIntValue(result) ?? 0;
+    print("📦 Remaining media count: $count");
 
-      final map = {
-        'survey_local_id': surveyLocalId,
-        'server_media_id': file.serverMediaId,
-        'media_type': type,
-        'local_path': file.localPath,
-        'is_synced': 0,
-        'is_deleted': 0,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      };
+    return count;
+  }
 
-      if (existing.isEmpty) {
-        await db.insert('survey_media', map);
-        totalAffected++;
-      } else {
-        await db.update(
+  Future<int> upsertSurveyMediaList({
+    required String surveyLocalId,
+    List<SurveyMediaModel> landPictures = const [],
+    List<SurveyMediaModel> surveyForms = const [],
+    List<SurveyMediaModel> consentForms = const [],
+  }) async {
+    final db = await database;
+    int totalAffected = 0;
+
+    Future<void> upsert(List<SurveyMediaModel> files, String type) async {
+      for (final file in files) {
+        final existing = await db.query(
           'survey_media',
-          map,
           where: 'survey_local_id = ? AND server_media_id = ?',
           whereArgs: [surveyLocalId, file.serverMediaId],
         );
-        totalAffected++;
+
+        final map = {
+          'survey_local_id': surveyLocalId,
+          'server_media_id': file.serverMediaId,
+          'media_type': type,
+          'local_path': file.localPath,
+          'is_synced': 0,
+          'is_deleted': 0,
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        if (existing.isEmpty) {
+          await db.insert('survey_media', map);
+          totalAffected++;
+        } else {
+          await db.update(
+            'survey_media',
+            map,
+            where: 'survey_local_id = ? AND server_media_id = ?',
+            whereArgs: [surveyLocalId, file.serverMediaId],
+          );
+          totalAffected++;
+        }
       }
     }
+
+    await upsert(landPictures, 'land');
+    await upsert(surveyForms, 'survey');
+    await upsert(consentForms, 'consent');
+
+    return totalAffected;
   }
 
-  await upsert(landPictures, 'land');
-  await upsert(surveyForms, 'survey');
-  await upsert(consentForms, 'consent');
+  Future<int> updateSurveyConsentForm({
+    required String surveyId,
+   
+    required List<SurveyMediaModel> consentForm,
+  }) async {
+    final db = await database;
+    print("RUCHITA UPDATED updateSurveyConsentForm IN LOCAL DB");
+    return await db.update(
+      'surveys',
+      {
+       
+        'consentForm': consentForm,
+      },
+      where: 'surveyId = ?',
+      whereArgs: [surveyId],
+    );
+  }
 
-  return totalAffected;
-}
-
-// Future<void> insertSurveyMediaList({
-//   required int surveyLocalId,
-//   List<SurveyMediaModel> landPictures = const [],
-//   List<SurveyMediaModel> surveyForms = const [],
-//   List<SurveyMediaModel> consentForms = const [],
-// }) async {
-//   final db = await database;
-//   final batch = db.batch();
-
-//   void addMedia(List<SurveyMediaModel> files, String type) {
-//     for (final file in files) {
-//       final map = {
-//         'survey_local_id': surveyLocalId,
-//         'server_media_id': file.id,
-//         'media_type': type,
-//         'local_path': file.localPath,
-//         'is_synced': 0,
-//         'is_deleted': 0,
-//         'created_at': DateTime.now().millisecondsSinceEpoch,
-//       };
-
-//       print("📝 Inserting media: $map"); // ✅ print inserted value
-//       batch.insert('survey_media', map);
-//     }
-//   }
-
-//   addMedia(landPictures, 'land');
-//   addMedia(surveyForms, 'survey');
-//   addMedia(consentForms, 'consent');
-
-//   await batch.commit(noResult: true);
-
-//   print("✅ Batch insert committed for survey $surveyLocalId");
-// }
-
-// Future<void> insertSurveyMediaList({
-//   required int surveyLocalId,
-//   List<SurveyMediaModel> landPictures = const [],
-//   List<SurveyMediaModel> surveyForms = const [],
-//   List<SurveyMediaModel> consentForms = const [],
-// }) async {
-//   final db = await database;
-//   final batch = db.batch();
-
-//   void addMedia(List<SurveyMediaModel> files, String type) {
-//     for (final file in files) {
-//       batch.insert('survey_media', {
-//         'survey_local_id': surveyLocalId,
-//         'server_media_id': file.id,
-//         'media_type': type,
-//         'local_path': file.localPath,
-//         'is_synced': 0,
-//         'is_deleted': 0,
-//         'created_at': DateTime.now().millisecondsSinceEpoch,
-//       });
-//     }
-//   }
-
-//   addMedia(landPictures, 'land');
-//   addMedia(surveyForms, 'survey');
-//   addMedia(consentForms, 'consent');
-
-//   await batch.commit(noResult: true);
-// }
-Future<int> updateSurveySyncFlags({
-  required String surveyId,
-  required int syncStatus,
-  required int serverSynced,
-  required String surveyStatus,
-}) async {
-  final db = await database;
-print("RUCHITA UPDATED updateSurveySyncFlags IN LOCAL DB");
-  return await db.update(
-    'surveys',
-    {
-      'isSync': syncStatus,
-      'serverSynced': serverSynced,
-      'surveyStatus': surveyStatus,
-    },
-    where: 'surveyId = ?',
-    whereArgs: [surveyId],
-  );
-}
   Future<void> clearTableSurvey() async {
     final db = await database;
     await db.delete('surveys');
@@ -546,20 +438,21 @@ print("RUCHITA UPDATED updateSurveySyncFlags IN LOCAL DB");
 
     await batch.commit(noResult: true);
   }
-Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
-    String surveyLocalId) async {
-  final db = await database;
 
-  final List<Map<String, dynamic>> maps = await db.query(
-    'survey_media',
-    where: 'survey_local_id = ?',
-    whereArgs: [surveyLocalId],
-    orderBy: 'id ASC',
-  );
-  print("MEdia LIST DATa");
-print(maps);
-  return maps.map((e) => SurveyMediaModel.fromMap(e)).toList();
-}
+  Future<List<SurveyMediaModel>> getSurveyMediaBySurveyLocalId(
+      String surveyLocalId) async {
+    final db = await database;
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'survey_media',
+      where: 'survey_local_id = ?',
+      whereArgs: [surveyLocalId],
+      orderBy: 'id ASC',
+    );
+    print("MEdia LIST DATa");
+    print(maps);
+    return maps.map((e) => SurveyMediaModel.fromMap(e)).toList();
+  }
 
   Future<void> insertTaluka(List<TalukaData> list) async {
     final db = await database;
@@ -584,23 +477,39 @@ print(maps);
 
     await batch.commit(noResult: true);
   }
-Future<List<SurveyMediaModel>> getSurveyMedia(String surveyLocalId) async {
-  print("GetSurveyMedia");
-  print(surveyLocalId);
+Future<int> deleteAllSurveyMedia(String surveyLocalId) async {
   final db = await database;
-  final res = await db.query(
+
+  final rows = await db.delete(
     'survey_media',
-    where: 'survey_local_id = ? AND is_deleted = 0',
+    where: 'survey_local_id = ?',
     whereArgs: [surveyLocalId],
   );
-  print(res);
-  return res.map((e) => SurveyMediaModel.fromMap(e)).toList();
+
+  print("🗑 Deleted ALL survey_media rows: $rows");
+  return rows;
 }
+
+  Future<List<SurveyMediaModel>> getSurveyMedia(String surveyLocalId) async {
+    // print("GetSurveyMedia");
+    // print(surveyLocalId);
+    final db = await database;
+    final res = await db.query(
+      'survey_media',
+      where: 'survey_local_id = ? AND is_deleted = 0',
+      whereArgs: [surveyLocalId],
+    );
+    // print(res);
+    return res.map((e) => SurveyMediaModel.fromMap(e)).toList();
+  }
+
   Future<int> mediaCunt() async {
     final db = await database;
-    final result = await db.rawQuery("SELECT COUNT(*) as count FROM survey_media");
+    final result =
+        await db.rawQuery("SELECT COUNT(*) as count FROM survey_media");
     return Sqflite.firstIntValue(result) ?? 0;
   }
+
   Future<void> insertVillage(List<VillageData> list) async {
     final db = await database;
 
@@ -692,70 +601,120 @@ Future<List<SurveyMediaModel>> getSurveyMedia(String surveyLocalId) async {
   Future<int> insertSurvey(SurveyModel survey) async {
     print("INSERTED SURVEY");
     final db = await instance.database;
-    return await db.insert('surveys', survey.toJsonDB(), conflictAlgorithm: ConflictAlgorithm.replace,);
-  }
-Future<bool> surveyExists(String surveyId) async {
-  final db = await database;
-
-  final result = await db.query(
-    'surveys',
-    where: 'surveyId = ?',
-    whereArgs: [surveyId],
-    limit: 1,
-  );
-
-  return result.isNotEmpty;
-}
-
-
-//update
-  Future<int> updateSurvey(SurveyModel survey, int surveyID) async {
-    final db = await instance.database;
-    print("UPDATED SURVEY ID: $surveyID");
-
-    // Remove null fields or id from the map
-    final map = survey.toJsonDB();
-    map.remove('id'); // ❌ do NOT update primary key
-
-    // Replace any null with default values to avoid datatype mismatch
-    map.updateAll((key, value) {
-      if (value == null) {
-        if (key.contains('Latitude') || key.contains('Longitude')) return 0.0;
-        if (key.contains('Capacity') ||
-            key.contains('AC') ||
-            key.contains('DC')) return 0;
-        if (key == 'consentAvailable' || key == 'isSurveyapproved') return 0;
-        return ''; // default for strings
-      }
-      return value;
-    });
-
-    return await db.update(
+    return await db.insert(
       'surveys',
-      map,
-      where: 'id = ?',
-      whereArgs: [surveyID],
+      survey.toJsonDB(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+Future<bool> hasUnsyncedConsent(String surveyId) async {
+  final db = await database;
+
+  final res = await db.query(
+    'survey_media',
+    where: 'survey_local_id = ? AND media_type = ? AND is_synced = 0 AND is_deleted = 0',
+    whereArgs: [surveyId, 'consent'],
+  );
+
+  return res.isNotEmpty;
+}
+
+  Future<bool> surveyExists(String surveyId) async {
+    final db = await database;
+
+    final result = await db.query(
+      'surveys',
+      where: 'surveyId = ?',
+      whereArgs: [surveyId],
+      limit: 1,
+    );
+
+    return result.isNotEmpty;
+  }
+
+
+Future<int> updateSurveyBySurveyId(
+  SurveyModel survey,
+  String surveyId,
+) async {
+  final db = await instance.database;
+
+  final map = survey.toJsonDB();
+
+  // NEVER update local primary key
+  map.remove('id');
+
+  map.updateAll((key, value) {
+    if (value == null) {
+      if (key.contains('Latitude') || key.contains('Longitude')) return 0.0;
+      if (key.contains('Capacity') ||
+          key.contains('AC') ||
+          key.contains('DC')) return 0;
+      if (key == 'consentAvailable' || key == 'isSurveyapproved') return 0;
+      return '';
+    }
+    return value;
+  });
+
+  return await db.update(
+    'surveys',
+    map,
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+  );
+}
+Future<int> updateConsentFormBySurveyId({
+  required String surveyId,
+  required String consentFormsJson,
+}) async {
+  final db = await instance.database;
+
+  return await db.update(
+    'surveys',
+    {
+      'consentForms': consentFormsJson,
+      // 'needSynced': 1,               // mark for sync
+      'updatedsurveyDate': DateTime.now().millisecondsSinceEpoch,
+    },
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+  );
+}
 
   // Fetch all
   Future<List<SurveyModel>> getAllSurveys() async {
     final db = await instance.database;
     final result = await db.query('surveys');
     print("TOTAL SURVEY ${result.length}");
-    
+
     return result.map((json) => SurveyModel.fromJsonDB(json)).toList();
   }
-Future<void> printAllSurveys(String surveyID) async {
-  final surveys = await DatabaseHelper.instance.getSurveyMedia(surveyID);
-print(surveys);
-  if (surveys.isEmpty) {
-    print("No surveys found in DB.");
-  } else {
-    for (var survey in surveys) {
-      print("=== Survey ID: ${survey.surveyLocalId} ===");
-      print("Land Pictures:");
-      // for (var media in survey.) {
+Future<List<SurveyModel>> getApprovedAndAwaitingSurveys() async {
+  final db = await instance.database;
+
+  final result = await db.query(
+    'surveys',
+    where: 'LOWER(TRIM(surveyStatus)) IN (?, ?)',
+    whereArgs: ['awaiting approval', 'approved'],
+  );
+
+  print("FILTERED SURVEY COUNT ${result.length}");
+
+  return result
+      .map((json) => SurveyModel.fromJsonDB(json))
+      .toList();
+}
+
+  Future<void> printAllSurveys(String surveyID) async {
+    final surveys = await DatabaseHelper.instance.getSurveyMedia(surveyID);
+    print(surveys);
+    if (surveys.isEmpty) {
+      print("No surveys found in DB.");
+    } else {
+      for (var survey in surveys) {
+        print("=== Survey ID: ${survey.surveyLocalId} ===");
+        print("Land Pictures:");
+        // for (var media in survey.) {
         print("  Media ID: ${survey.serverMediaId}");
         print("  Local Path: ${survey.localPath}");
         print("  Media Type: ${survey.mediaType}");
@@ -774,9 +733,9 @@ print(surveys);
       //   print("  Local Path: ${media.localPath}");
       //   print("  Media Type: ${media.mediaType}");
       // }
-    // }
+      // }
+    }
   }
-}
 
   Future<List<SurveyModel>> getPendingSurveys() async {
     final db = await instance.database;
@@ -897,34 +856,20 @@ print(surveys);
     };
   }
 
-// Future<Map<String, dynamic>> getAllSurveysWithCounts() async {
-//   final db = await instance.database;
+Future<SurveyModel?> getSurveyBySurveyId(String surveyId) async {
+  final db = await instance.database;
 
-//   final result = await db.query('surveys');
-//   // final surveys = result.map((json) => SurveyModel.fromJsonDB(json)).toList();
-// final totalSurvey = Sqflite.firstIntValue(
-//   await db.rawQuery('SELECT COUNT(*) FROM surveys'),
-// ) ?? 0;
-//   final approvedCount = Sqflite.firstIntValue(
-//     await db.rawQuery('SELECT COUNT(*) FROM surveys WHERE isSurveyapproved = 1'),
-//   ) ?? 0;
-//  final pendingCount = Sqflite.firstIntValue(
-//     await db.rawQuery('SELECT COUNT(*) FROM surveys WHERE isSurveyapproved = 0'),
-//   ) ?? 0;
-//   final consentCount = Sqflite.firstIntValue(
-//     await db.rawQuery('SELECT COUNT(*) FROM surveys WHERE consentAvailable = 1'),
-//   ) ?? 0;
+  final result = await db.query(
+    'surveys',
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+    limit: 1,
+  );
 
-//   GlobalLists.totalSurvey=totalSurvey.toString();
-//    GlobalLists.approvedSurvey=approvedCount.toString();
-//     GlobalLists.consentSurvey=consentCount.toString();
-//     GlobalLists.pendingSurvey=pendingCount.toString();
-//   return {
-//     "surveys": totalSurvey,
-//     "approvedCount": approvedCount,
-//     "consentCount": consentCount,
-//   };
-// }
+  if (result.isEmpty) return null;
+
+  return SurveyModel.fromJsonDB(result.first);
+}
 
   // Delete
   Future<int> deleteSurvey(int id) async {

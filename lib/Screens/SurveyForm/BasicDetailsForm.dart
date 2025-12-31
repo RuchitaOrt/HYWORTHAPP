@@ -29,7 +29,8 @@ class _BasicDetailsFormState extends State<BasicDetailsForm> {
       askLocationConfirmation(context, "Basic");
     });
   }
-
+String stateCode="";
+String districtCode="";
   @override
   Widget build(BuildContext context) {
     final basicFormProvider = Provider.of<BasicFormProvider>(context);
@@ -72,6 +73,8 @@ class _BasicDetailsFormState extends State<BasicDetailsForm> {
               return {
                 'id': (d.id ?? 0).toString(),
                 'name': d.name ?? "",
+                "statecode":d.stateCode ?? ""
+                
               };
             }).toList();
 print("State");
@@ -97,7 +100,12 @@ print(stateMaps.length);
             basicFormProvider.selectedLandState = {
               'id': "${value!['id']}",
               'name': "${value['name']}",
+               "statecode":"${value['statecode']}",
             };
+print("Selected Statre: $value");
+            stateCode=value['statecode'].toString();
+            print("Selected Statre: ${value['statecode'].toString()}");
+
           },
         ),
 
@@ -105,13 +113,14 @@ print(stateMaps.length);
           title: t(context, 'land_district'),
           hintText: t(context, "select_district"),
           asyncItems: (filter, loadProps) async {
-            final districtList = await basicFormProvider.fetchDistrict();
+            final districtList = await basicFormProvider.fetchDistrict(stateCode: stateCode);
 
             // Convert to Map<String, String>
             final stateMaps = districtList.map((d) {
               return {
                 'id': (d.id).toString(),
                 'district_name': d.districtName ?? "",
+                'districtcode':d.districtCode ??""
               };
             }).toList();
  print("District");
@@ -142,7 +151,11 @@ print(stateMaps.length);
             basicFormProvider.selectedLandDistrict = {
               'id': "${value!['id']}",
               'district_name': "${value!['district_name']}",
+              'districtcode':"${value!['districtcode']}",
             };
+
+             districtCode=value['districtcode'].toString();
+             print("districtCode selected ${districtCode}");
           },
         ),
 // Taluka dropdown
@@ -150,13 +163,14 @@ print(stateMaps.length);
           title: t(context, 'land_taluka'),
           hintText: t(context, "select_taluka"),
           asyncItems: (filter, loadProps) async {
-            final talukaList = await basicFormProvider.fetchTaluka();
+            final talukaList = await basicFormProvider.fetchTaluka(districtCode:districtCode );
 
             // Convert to Map<String, String>
             final talukaMaps = talukaList.map((d) {
               return {
                 'id': (d.id ).toString(),
                 'taluka_name': d.talukaName ?? "",
+                'districtcode':d.districtCode ??""
               };
             }).toList();
             print("TALUKA");
@@ -185,7 +199,10 @@ print(talukaMaps.length);
             basicFormProvider.selectedLandTaluka = {
               'id': "${value!['id']}",
               'taluka_name': "${value!['taluka_name']}",
+              "districtcode":"${value!['districtcode']}",
             };
+             districtCode=value['districtcode'].toString();
+             print("districtCode selected ${districtCode}");
           },
         ),
 
@@ -200,7 +217,7 @@ SearchableDropdown(
       : null,
 
 asyncItems: (filter, loadProps) async {
-  final rows = await basicFormProvider.searchVillage(filter);
+  final rows = await basicFormProvider.searchVillage(filter,districtCode: districtCode);
         print("Village");
 print(rows.length);
   return rows.map<Map<String, String>>((e) {

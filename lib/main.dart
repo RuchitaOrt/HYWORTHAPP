@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hyworth_land_survey/Database/DatabaseHelper.dart';
 
@@ -10,33 +11,50 @@ import 'package:hyworth_land_survey/Utils/UtilityFile.dart';
 import 'package:hyworth_land_survey/Utils/backgroundService.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 import 'package:hyworth_land_survey/routes/routers.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:workmanager/workmanager.dart';
 
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+Future<void> requestNotificationPermission() async {
+  if (await Permission.notification.isDenied ||
+      await Permission.notification.isRestricted) {
+    final status = await Permission.notification.request();
+    debugPrint("🔔 Notification permission: $status");
+  }
+}
 
+Future<void> initNotifications() async {
+  const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const settings = InitializationSettings(android: android);
+
+  await flutterLocalNotificationsPlugin.initialize(settings);
+}
 
 final RouteObserver<ModalRoute<void>> routeObserver =
     RouteObserver<ModalRoute<void>>();
 
 final GlobalKey<NavigatorState> routeGlobalKey = GlobalKey();
 void main() async {
-
-WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 //await DatabaseHelper.instance.deleteOldDatabase();
-  
- await   Utility().loadAPIConfig();
-  
- //Initialize Workmanager
-//  await Workmanager().initialize(
-//     callbackDispatcher,
-//     isInDebugMode: true, // prints logs for debugging
-//   );
-//   await Workmanager().registerOneOffTask(
-//   "testTask",
-//   syncTask,
-//   initialDelay: Duration(seconds: 5), // triggers 5s after app start
-// );
 
+  await initNotifications(); // 🔥 REQUIRED
+  await requestNotificationPermission();
+  await Utility().loadAPIConfig();
+
+//  //Initialize Workmanager
+  await Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: true, // prints logs for debugging
+  );
+  await Workmanager().registerOneOffTask(
+    "testTask",
+    syncTask,
+    initialDelay: Duration(seconds: 5), // triggers 5s after app start
+  );
 
   // await Workmanager().registerPeriodicTask(
   //   "backgroundSync",
@@ -54,12 +72,21 @@ WidgetsFlutterBinding.ensureInitialized();
   //   syncTask,
   //   frequency: Duration(minutes: 15),
   // );
-SystemChrome.setPreferredOrientations([
+
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  final InitializationSettings initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+  );
+
+  flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
   runApp(MyApp());
-  
 }
 
 class MyApp extends StatefulWidget {
@@ -75,11 +102,10 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-   
         ChangeNotifierProvider<AppProvider>(
           create: (context) => AppProvider(),
         ),
-         ChangeNotifierProvider<BasicFormProvider>(
+        ChangeNotifierProvider<BasicFormProvider>(
           create: (context) => BasicFormProvider(),
         ),
       ],

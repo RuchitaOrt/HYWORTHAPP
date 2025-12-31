@@ -7,6 +7,7 @@ import 'package:hyworth_land_survey/Provider/app_provider.dart';
 import 'package:hyworth_land_survey/Screens/MainTabScreen.dart';
 import 'package:hyworth_land_survey/Screens/SurveyForm/StepForm.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
+import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 import 'package:hyworth_land_survey/Utils/commonstrings.dart';
 import 'package:hyworth_land_survey/Utils/internetConnection.dart';
@@ -115,7 +116,7 @@ class _DetailFormState extends State<DetailForm> {
     if (widget.isEdit == 1) {
       //LAND DETAILS
       print(widget.surveyListing!.surveyId);
-      provider.surverID=widget.surveyListing!.surveyId;
+      provider.surverID = widget.surveyListing!.surveyId;
       // provider.landDistrictController.text =
       //     widget.surveyListing!.landDistrict!;
       provider.selectedLandState = {
@@ -270,65 +271,61 @@ class _DetailFormState extends State<DetailForm> {
 
     final consentForms =
         mediaList.where((m) => m.mediaType == 'consent').toList();
-print(surveyForms);
-        if(surveyForms.isNotEmpty)
-        {
-          print(widget.surveyListing!.surveyForms);
- widget.surveyListing!.surveyForms[0].localPath != surveyForms[0].localPath;
-    widget.surveyListing!.surveyForms[0].serverMediaId !=
-        surveyForms[0].serverMediaId;
-        }
-   
+    print(surveyForms);
+    if (surveyForms.isNotEmpty) {
+      print(widget.surveyListing!.surveyForms);
+      widget.surveyListing!.surveyForms[0].localPath !=
+          surveyForms[0].localPath;
+      widget.surveyListing!.surveyForms[0].serverMediaId !=
+          surveyForms[0].serverMediaId;
+    }
+
     widget.surveyListing!.landPictures != landPictures;
-// widget.surveyListing!.consentForms =consentForms;
-//           widget.surveyListing!.surveyForms[0].id != surveyFormMedia.id;
+    widget.surveyListing!.consentForms!=consentForms;
+
     /// ---------- DEBUG ----------
     print("EDIT MEDIA FROM DB");
     print("Survey Forms: ${surveyForms.length}");
-for(int i=0;i<surveyForms.length;i++)
-{
-  print("surveyForms values ${surveyForms[i].mediaType} ${surveyForms[i].serverMediaId} ${surveyForms[i].localPath} ${surveyForms[i].surveyLocalId}");
-
-}
-
+    for (int i = 0; i < surveyForms.length; i++) {
+      print(
+          "surveyForms values ${surveyForms[i].mediaType} ${surveyForms[i].serverMediaId} ${surveyForms[i].localPath} ${surveyForms[i].surveyLocalId}");
+    }
 
     /// ---------- SET TO PROVIDER ----------
 
     // Survey form (single)
     if (surveyForms.isNotEmpty) {
-
       final media = surveyForms.first;
       print("COME");
-      print(      media.localPath);
+      print(media.localPath);
       print(media.serverMediaId);
-      provider.setImage(File(media.localPath),media.serverMediaId==""?0: int.parse(media.serverMediaId));
+      provider.setImage(File(media.localPath),
+          media.serverMediaId == "" ? 0 : int.parse(media.serverMediaId));
     }
 
     // Land pictures (multiple)
     provider.OtherLandmediaFiles.clear();
     // for (int i = 0; i < landPictures.length; i++) {
     //   provider.OtherLandmediaFiles.add(File(landPictures[i].localPath));
-      
+
     //   provider.setMediaFile(i, File(landPictures[i].localPath));
     // }
-provider.OtherLandmediaFiles.clear();
+    provider.OtherLandmediaFiles.clear();
 
-for (int i = 0; i < landPictures.length; i++) {
-  provider.OtherLandmediaFiles.add(
-    SurveyMediaModel(
-      id: landPictures[i].id,
-      surveyLocalId: landPictures[i].surveyLocalId,
-      mediaType: MediaTypeValue.landPicture,
-      localPath: landPictures[i].localPath,
-      serverMediaId: landPictures[i].serverMediaId,
-      isSynced: landPictures[i].isSynced,
-      isdeleted: landPictures[i].isdeleted,
-      createdAt: landPictures[i].createdAt,
-    ),
-  );
-}
-
-
+    for (int i = 0; i < landPictures.length; i++) {
+      provider.OtherLandmediaFiles.add(
+        SurveyMediaModel(
+          id: landPictures[i].id,
+          surveyLocalId: landPictures[i].surveyLocalId,
+          mediaType: MediaTypeValue.landPicture,
+          localPath: landPictures[i].localPath,
+          serverMediaId: landPictures[i].serverMediaId,
+          isSynced: landPictures[i].isSynced,
+          isdeleted: landPictures[i].isdeleted,
+          createdAt: landPictures[i].createdAt,
+        ),
+      );
+    }
 
     // final file = File(surveyForms[0].localPath);
     // widget.surveyListing!.surveyForms[0].localPath != file;
@@ -343,7 +340,6 @@ for (int i = 0; i < landPictures.length; i++) {
     //   landPictures.map((media) => File(media.localPath)).toList(),
     // );
 
-   
     // Consent forms (if needed later)
   }
 
@@ -369,7 +365,6 @@ for (int i = 0; i < landPictures.length; i++) {
       //   isStepValid = provider.isBasicFormValid;
       //   break;
     }
-
 
     if (currentStep < 4) {
       setState(() {
@@ -398,154 +393,131 @@ for (int i = 0; i < landPictures.length; i++) {
         final consentFormsMedia =
             mediaList.where((m) => m.mediaType == 'consent').toList();
 
-             print("MEDIA LISTING");
-      print(surveyFormsMedia.length);
-       print(landPicturesMedia.length);
-       print(consentFormsMedia.length);
-       
-// final existingLandPictures = landPicturesMedia.map((media) {
-//   return SurveyMediaModel(
-//     surveyLocalId: widget.surveyListing!.surveyId.toString(),
-//     mediaType: 'land',
-//     serverMediaId: media.serverMediaId,
-//     localPath: media.localPath,
-//     isSynced: 1,        // ✅ already uploaded
-//     isdeleted: 0,
-//     createdAt: media.createdAt,
-//   );
-// }).toList();
-// final newLandPictures =
-//     basicFormProvider.OtherLandmediaFiles
-//         .where((file) => file != null)
-//         .map((file) => SurveyMediaModel(
-//               surveyLocalId: widget.surveyListing!.surveyId.toString(),
-//               mediaType: 'land',
-//               serverMediaId: "",      // 👈 CRITICAL
-//               localPath: file!.localPath,
-//               isSynced: 0,            // 👈 NEW
-//               isdeleted: 0,
-//               createdAt: DateTime.now().millisecondsSinceEpoch,
-//             ))
-//         .toList();
-// final landPictures = [
-//   ...existingLandPictures,
-//   ...newLandPictures,
-// ];
-// final existingSurveyForms = surveyFormsMedia.map((media) {
-//   return SurveyMediaModel(
-//     surveyLocalId: widget.surveyListing!.surveyId.toString(),
-//     mediaType: 'survey',
-//     localPath: media.localPath,
-//     serverMediaId: media.serverMediaId,
-//     isSynced: 1,     // ✅ server image
-//     isdeleted: 0,
-//     createdAt: media.createdAt,
-//   );
-// }).toList();
-// List<SurveyMediaModel> newSurveyForms =
-//     basicFormProvider.surveyFormsmediaFile != null
-//         ? [
-//             SurveyMediaModel(
-//               surveyLocalId: widget.surveyListing!.surveyId.toString(),
-//               mediaType: 'survey',
-//               localPath:
-//                   basicFormProvider.surveyFormsmediaFile!.path,
-//               serverMediaId: "",      // 👈 NEW
-//               isSynced: 0,
-//               isdeleted: 0,
-//               createdAt: DateTime.now().millisecondsSinceEpoch,
-//             )
-//           ]
-//         : [];
-// final List<SurveyMediaModel> surveyForms = [
-//   ...existingSurveyForms,
-//   ...newSurveyForms,
-// ];
-final existingLandPictures = landPicturesMedia.map((media) {
-  return SurveyMediaModel(
-    surveyLocalId: widget.surveyListing!.surveyId.toString(),
-    mediaType: 'land',
-    serverMediaId: media.serverMediaId,
-    localPath: media.localPath,
-    isSynced: media.isSynced, // keep real state
-    isdeleted: 0,
-    createdAt: media.createdAt,
-  );
-}).toList();
+        print("MEDIA LISTING");
+        print(surveyFormsMedia.length);
+        print(landPicturesMedia.length);
+        print(consentFormsMedia.length);
 
-final existingLandPaths =
-    existingLandPictures.map((e) => e.localPath).toSet();
+        final existingLandPictures = landPicturesMedia.map((media) {
+          return SurveyMediaModel(
+            surveyLocalId: widget.surveyListing!.surveyId.toString(),
+            mediaType: 'land',
+            serverMediaId: media.serverMediaId,
+            localPath: media.localPath,
+            isSynced: media.isSynced, // keep real state
+            isdeleted: 0,
+            createdAt: media.createdAt,
+          );
+        }).toList();
 
-final newLandPictures = basicFormProvider.OtherLandmediaFiles
-    .where((file) =>
-        file != null && !existingLandPaths.contains(file.localPath))
-    .map((file) => SurveyMediaModel(
-          surveyLocalId: widget.surveyListing!.surveyId.toString(),
-          mediaType: 'land',
-          serverMediaId: "",
-          localPath: file!.localPath,
-          isSynced: 0,
-          isdeleted: 0,
-          createdAt: DateTime.now().millisecondsSinceEpoch,
-        ))
-    .toList();
+        final existingLandPaths =
+            existingLandPictures.map((e) => e.localPath).toSet();
 
-final landPictures = [
-  ...existingLandPictures,
-  ...newLandPictures,
-];
+        final newLandPictures = basicFormProvider.OtherLandmediaFiles.where(
+                (file) =>
+                    file != null && !existingLandPaths.contains(file.localPath))
+            .map((file) => SurveyMediaModel(
+                  surveyLocalId: widget.surveyListing!.surveyId.toString(),
+                  mediaType: 'land',
+                  serverMediaId: "",
+                  localPath: file!.localPath,
+                  isSynced: 0,
+                  isdeleted: 0,
+                  createdAt: DateTime.now().millisecondsSinceEpoch,
+                ))
+            .toList();
 
-final existingSurveyForms = surveyFormsMedia.map((media) {
-  return SurveyMediaModel(
-    surveyLocalId: widget.surveyListing!.surveyId.toString(),
-    mediaType: 'survey',
-    localPath: media.localPath,
-    serverMediaId: media.serverMediaId,
-    isSynced: media.isSynced, // ✅ important
-    isdeleted: 0,
-    createdAt: media.createdAt,
-  );
-}).toList();
-final existingSurveyPaths =
-    existingSurveyForms.map((e) => e.localPath).toSet();
+        final landPictures = [
+          ...existingLandPictures,
+          ...newLandPictures,
+        ];
 
-List<SurveyMediaModel> newSurveyForms =
-    (basicFormProvider.surveyFormsmediaFile != null &&
-            !existingSurveyPaths.contains(
-                basicFormProvider.surveyFormsmediaFile!.path))
-        ? [
-            SurveyMediaModel(
-              surveyLocalId: widget.surveyListing!.surveyId.toString(),
-              mediaType: 'survey',
-              localPath: basicFormProvider.surveyFormsmediaFile!.path,
-              serverMediaId: "",
-              isSynced: 0,
-              isdeleted: 0,
-              createdAt: DateTime.now().millisecondsSinceEpoch,
-            )
-          ]
-        : [];
-final List<SurveyMediaModel> surveyForms = [
-  ...existingSurveyForms,
-  ...newSurveyForms,
-];
+        final existingSurveyForms = surveyFormsMedia.map((media) {
+          return SurveyMediaModel(
+            surveyLocalId: widget.surveyListing!.surveyId.toString(),
+            mediaType: 'survey',
+            localPath: media.localPath,
+            serverMediaId: media.serverMediaId,
+            isSynced: media.isSynced, // ✅ important
+            isdeleted: 0,
+            createdAt: media.createdAt,
+          );
+        }).toList();
+        final existingSurveyPaths =
+            existingSurveyForms.map((e) => e.localPath).toSet();
 
-print("MEDIA LISTING UPDATED");
+        List<SurveyMediaModel> newSurveyForms =
+            (basicFormProvider.surveyFormsmediaFile != null &&
+                    !existingSurveyPaths
+                        .contains(basicFormProvider.surveyFormsmediaFile!.path))
+                ? [
+                    SurveyMediaModel(
+                      surveyLocalId: widget.surveyListing!.surveyId.toString(),
+                      mediaType: 'survey',
+                      localPath: basicFormProvider.surveyFormsmediaFile!.path,
+                      serverMediaId: "",
+                      isSynced: 0,
+                      isdeleted: 0,
+                      createdAt: DateTime.now().millisecondsSinceEpoch,
+                    )
+                  ]
+                : [];
+        final List<SurveyMediaModel> surveyForms = [
+          ...existingSurveyForms,
+          ...newSurveyForms,
+        ];
+        
+      //CONSENT FORM
+ final existingConsent = consentFormsMedia.map((media) {
+          return SurveyMediaModel(
+            surveyLocalId: widget.surveyListing!.surveyId.toString(),
+            mediaType: 'consent',
+            serverMediaId: media.serverMediaId,
+            localPath: media.localPath,
+            isSynced: media.isSynced, // keep real state
+            isdeleted: 0,
+            createdAt: media.createdAt,
+          );
+        }).toList();
 
-print("SurveyForms: ${surveyForms.length}");
-for(int i=0;i<surveyForms.length;i++)
-{
-  print("surveyForms values ${surveyForms[i].mediaType} ${surveyForms[i].serverMediaId} ${surveyForms[i].localPath} ${surveyForms[i].surveyLocalId}");
+        final existingConsentPath =
+            existingConsent.map((e) => e.localPath).toSet();
 
-}
+        final newConsent = basicFormProvider.consentFiles.where(
+                (file) =>
+                    file != null && !existingConsentPath.contains(file.localPath))
+            .map((file) => SurveyMediaModel(
+                  surveyLocalId: widget.surveyListing!.surveyId.toString(),
+                  mediaType: 'consent',
+                  serverMediaId: "",
+                  localPath: file!.localPath,
+                  isSynced: 0,
+                  isdeleted: 0,
+                  createdAt: DateTime.now().millisecondsSinceEpoch,
+                ))
+            .toList();
 
-print("LandPictures: ${landPictures.length}");
+        final consentForm = [
+          ...existingConsent,
+          ...newConsent,
+        ];
+
+
+        print("MEDIA LISTING UPDATED");
+
+        print("SurveyForms: ${surveyForms.length}");
+        for (int i = 0; i < surveyForms.length; i++) {
+          print(
+              "surveyForms values ${surveyForms[i].mediaType} ${surveyForms[i].serverMediaId} ${surveyForms[i].localPath} ${surveyForms[i].surveyLocalId}");
+        }
+
+        print("LandPictures: ${landPictures.length}");
 
 //  print("MEDIA LISTING UPDATED");
 //       print(surveyForms.length);
 //        print(landPictures.length);
-       
-     //  print(consentFormsMedia.length);
+
+        //  print(consentFormsMedia.length);
         SurveyModel survey = SurveyModel(
             surveyId:
                 widget.surveyListing!.surveyId.toString() ?? "", // never null
@@ -611,10 +583,11 @@ print("LandPictures: ${landPictures.length}");
             //     .map((file) => file!.path) // extract paths
             //     .toList(),
             landPictures: landPictures,
-            surveyForms:surveyForms,
-            consentForms: [],
+            surveyForms: surveyForms,
+            consentForms: consentForm,
             isSync: 0,
             serverSynced: widget.surveyListing!.serverSynced,
+             needSynced:1,
             isSurveyapproved: 0,
             consentAvailable: 0,
             selectedLanguage: Provider.of<AppProvider>(context, listen: false).currentLanguage,
@@ -623,34 +596,28 @@ print("LandPictures: ${landPictures.length}");
             surveyStatus: CommonStrings.strPending);
         var status1 = await ConnectionDetector.checkInternetConnection();
         if (canSync && status1) {
+           final GlobalKey<State> _keyLoader = new GlobalKey<State>();
+          showLoadingDialog(routeGlobalKey.currentContext!,_keyLoader);
           print("CALIING UPDATE API TO INSERT HERE");
           print("CALIING RANGA");
-            print("AAAAAA 1");
+          print("AAAAAA 1");
           print((survey.landPictures.length));
-          //print((survey.landPictures[0].serverMediaId.toString()));
-          if (widget.surveyListing!.serverSynced == 1) {
-            basicFormProvider.UpdateLandSurvey(survey);
-          } else {
-            print("HYWORTH submit apicall WHEN EDITED and then called time");
-            basicFormProvider.submitLandSurvey(survey);
-          } 
-
           final updatedRows = await DatabaseHelper.instance
-              .updateSurvey(survey, widget.surveyListing!.id!);
+              .updateSurveyBySurveyId(survey, widget.surveyListing!.surveyId!);
           print("Survey : ${survey.surveyId}");
           print("Survey : ${survey.isSurveyapproved}");
-         
+
           print("BEFORE At SERVER INSERT NEW");
           print(widget.surveyListing!.landPictures.length);
-            await DatabaseHelper.instance.insertSurveyMediaList(
-              surveyLocalId: survey.surveyId.toString(),
+          await DatabaseHelper.instance.insertSurveyMediaList(
+            surveyLocalId: survey.surveyId.toString(),
 
-              landPictures:newLandPictures, //landPictures,
+            landPictures: newLandPictures, //landPictures,
 
-              surveyForms:newSurveyForms,//surveyForms,
+            surveyForms: newSurveyForms, //surveyForms,
 
-              consentForms: [], // not available at creation time
-            );
+            consentForms: newConsent, // not available at creation time
+          );
           //  }
 
           if (updatedRows > 0) {
@@ -658,9 +625,22 @@ print("LandPictures: ${landPictures.length}");
           } else {
             print("⚠️ No survey found to update");
           }
+
+          print("✅AFETR UPDAGTE");
+          print("-----------${widget.surveyListing!.serverSynced}-------");
+          if (widget.surveyListing!.serverSynced == 1) {
+            print("----${widget.surveyListing!.id!}---");
+            await basicFormProvider.updateLandSurvey(
+                survey, widget.surveyListing!.id!);
+          } else {
+            print("HYWORTH submit apicall WHEN EDITED and then called time");
+            await basicFormProvider.submitLandSurvey(
+                survey,);
+          }
+          Navigator.pop(context, true);
         } else {
           final updatedRows = await DatabaseHelper.instance
-              .updateSurvey(survey, widget.surveyListing!.id!);
+              .updateSurveyBySurveyId(survey, widget.surveyListing!.surveyId!);
           print("Survey : ${survey.surveyId}");
           print("Survey : ${survey.isSurveyapproved}");
           if (updatedRows > 0) {
@@ -668,29 +648,27 @@ print("LandPictures: ${landPictures.length}");
           } else {
             print("⚠️ No survey found to update");
           }
-//          
+//
           print("BEFORE INSERT NEW");
           print(widget.surveyListing!.landPictures.length);
-            await DatabaseHelper.instance.insertSurveyMediaList(
-              surveyLocalId: survey.surveyId.toString(),
+          await DatabaseHelper.instance.insertSurveyMediaList(
+            surveyLocalId: survey.surveyId.toString(),
 
-             landPictures:newLandPictures, //landPictures,
+            landPictures: newLandPictures, //landPictures,
 
-              surveyForms:newSurveyForms,//surveyForms,
+            surveyForms: newSurveyForms, //surveyForms,
 
-
-              consentForms: [], // not available at creation time
-            );
-          // }
-          final result =
-              await Navigator.of(routeGlobalKey.currentContext!).push(
-            createSlideFromBottomRoute(
-              Maintabscreen(),
-            ),
+            consentForms: newConsent, // not available at creation time
           );
+          // }
+          Navigator.pop(context, true);
+          // final result =
+          //     await Navigator.of(routeGlobalKey.currentContext!).push(
+          //   createSlideFromBottomRoute(
+          //     Maintabscreen(),
+          //   ),
+          // );
         }
-
-        // Navigator.pop(context, true);
       } else {
         print("Inserted 0 Last Button Save & EXIT");
         print("RANGA");
@@ -699,21 +677,6 @@ print("LandPictures: ${landPictures.length}");
         print(canSync);
         String surveyID = await generateSurveyId() ?? "";
         List<SurveyMediaModel> landPictures = [];
-        //  for (var media in basicFormProvider.OtherLandmediaFiles ?? []) {
-//     // Download the image and get the local file path
-
-//     // Create SurveyMediaModel with localPath
-//     landPictures.add(SurveyMediaModel(
-//       surveyLocalId:0,
-//       mediaType: 'survey',
-//       id: media.id,
-//       localPath:media.local_path,  // ✅ store downloaded local file path
-//       isSynced: 1,
-
-//     ));
-//       print("otherImages IMAGES");
-
-//   }
 
 // SURVEY FORMS (single file example)
         landPictures = basicFormProvider.OtherLandmediaFiles.where(
@@ -728,8 +691,6 @@ print("LandPictures: ${landPictures.length}");
                   isSynced: 0, // not synced yet
                 ))
             .toList();
-
-
 
         List<SurveyMediaModel> surveyForms =
             basicFormProvider.surveyFormsmediaFile != null
@@ -746,7 +707,25 @@ print("LandPictures: ${landPictures.length}");
                     )
                   ]
                 : [];
- provider.surverID=surveyID;
+
+                //CONSENT FORM
+List<SurveyMediaModel> consentForm = [];
+
+// SURVEY FORMS (single file example)
+        consentForm = basicFormProvider.consentFiles.where(
+                (file) => file != null) // keep only non-null
+            .map((file) => SurveyMediaModel(
+                  surveyLocalId: surveyID, // set after inserting survey
+                  mediaType: 'consent',
+                  serverMediaId: "",
+                  createdAt: 0,
+                  isdeleted: 0,
+                  localPath: file!.localPath,
+                  isSynced: 0, // not synced yet
+                ))
+            .toList();
+
+        provider.surverID = surveyID;
         SurveyModel survey = SurveyModel(
           surveyId: surveyID, //await generateSurveyId() ?? "";
           userId: "1",
@@ -826,7 +805,7 @@ print("LandPictures: ${landPictures.length}");
           nearestHighway: basicFormProvider.nearestHighwayController.text,
           landPictures: landPictures,
           surveyForms: surveyForms,
-          consentForms: [],
+          consentForms: consentForm,
 
           // surveyForms: basicFormProvider.surveyFormsmediaFile != null
           //     ? [basicFormProvider.surveyFormsmediaFile!.path]
@@ -842,7 +821,7 @@ print("LandPictures: ${landPictures.length}");
           /// 🔑 FINAL DECISION
           isSync: 0,
           serverSynced: 0,
-
+ needSynced:1,
           selectedLanguage:
               Provider.of<AppProvider>(context, listen: false).currentLanguage,
 
@@ -853,21 +832,10 @@ print("LandPictures: ${landPictures.length}");
 
         var status1 = await ConnectionDetector.checkInternetConnection();
         if (canSync && status1) {
-          print("CALIING API TO INSERT HERE");
-          print("RANGA");
-          print("RANGA ${survey.surveyForms.length}");
-          print("RANGA ${survey.landPictures.length}");
-
-           print("HYWORTH INSERTED WHEN NOT EDITED first time");
-          basicFormProvider.submitLandSurvey(survey);
-          // 1️⃣ INSERT SURVEY FIRST
-        
+           final GlobalKey<State> _keyLoader = new GlobalKey<State>();
+           showLoadingDialog(routeGlobalKey.currentContext!,_keyLoader);
+          final int surveyLocalId =
               await DatabaseHelper.instance.insertSurvey(survey);
-
-        
-
-// 2️⃣ INSERT MEDIA FILES
-
           await DatabaseHelper.instance.insertSurveyMediaList(
             surveyLocalId: surveyID,
 
@@ -875,10 +843,22 @@ print("LandPictures: ${landPictures.length}");
 
             surveyForms: surveyForms,
 
-            consentForms: [], // not available at creation time
+            consentForms: consentForm, // not available at creation time
           );
+          print("CALIING API TO INSERT HERE");
+          print("RANGA");
+          print("RANGA ${survey.surveyForms.length}");
+          print("RANGA ${survey.landPictures.length}");
 
-        
+          print("HYWORTH INSERTED WHEN NOT EDITED first time");
+          await basicFormProvider.submitLandSurvey(
+              survey,);
+          // 1️⃣ INSERT SURVEY FIRST
+
+// 2️⃣ INSERT MEDIA FILES
+
+          Navigator.pop(context, true);
+
           print("✅ Survey saved locally");
           print("Survey : ${survey.surveyId}");
           print("Survey : ${survey.isSurveyapproved}");
@@ -889,17 +869,16 @@ print("LandPictures: ${landPictures.length}");
           print("Survey : ${survey.surveyId}");
           print("Survey : ${survey.isSurveyapproved}");
 
-          
           await DatabaseHelper.instance.insertSurveyMediaList(
-            surveyLocalId:surveyID,
+            surveyLocalId: surveyID,
 
             landPictures: landPictures,
 
             surveyForms: surveyForms,
 
-            consentForms: [], // not available at creation time
+            consentForms: consentForm, // not available at creation time
           );
-          
+
           print("✅ Media inserted for survey Inserted $surveyLocalId");
 
           print("✅ Survey inserted locally with id = $surveyLocalId");
@@ -907,10 +886,11 @@ print("LandPictures: ${landPictures.length}");
           print("✅ Survey saved locally");
           print("Survey : ${survey.surveyId}");
           print("Survey : ${survey.isSurveyapproved}");
+          Navigator.pop(context, true);
         }
       }
 
-      Navigator.pop(context, true);
+      //
     }
   }
 
@@ -1058,7 +1038,6 @@ print("LandPictures: ${landPictures.length}");
     //   return false;
     // }
 
-   
     // if (p.surveyFormsmediaFile!=null) {
     //    print("surveyFormsmediaFile: ${p.surveyFormsmediaFile!.path!}");
     //   debugPrint("❌ Other Land media missing");
@@ -1093,19 +1072,16 @@ print("LandPictures: ${landPictures.length}");
   //   debugPrint("Valid files: $validCount / ${list.length}");
   //   return validCount >= minValid;
   // }
-bool hasValidMedia(
-  List<SurveyMediaModel?> mediaList, {
-  int minValid = 1,
-}) {
-  final validCount = mediaList
-      .where((m) =>
-          m != null &&
-          m.isdeleted == 0 &&
-          m.localPath.isNotEmpty)
-      .length;
+  bool hasValidMedia(
+    List<SurveyMediaModel?> mediaList, {
+    int minValid = 1,
+  }) {
+    final validCount = mediaList
+        .where((m) => m != null && m.isdeleted == 0 && m.localPath.isNotEmpty)
+        .length;
 
-  return validCount >= minValid;
-}
+    return validCount >= minValid;
+  }
 
   bool _hasList(List? list) {
     return list != null && list.isNotEmpty;
@@ -1214,24 +1190,14 @@ bool hasValidMedia(
                                   isSynced: 0, // local only
                                 ))
                             .toList();
-// List<SurveyMediaModel> surveyForms = basicFormProvider.surveyFormsmediaFile
-//     .whereType<SurveyMediaModel>()  // remove nulls
-//     .map((file) => SurveyMediaModel(
-//           surveyLocalId:int.parse(widget.surveyListing!.surveyId!), // or your survey id
-//           mediaType: 'land',
-//           id: file.id,                // new local file
-//           localPath: file.localPath,    // path from File
-//           isSynced: 0,             // local only
 
-//         ))
-//     .toList();
-// SURVEY FORMS (single file example)
                         List<SurveyMediaModel> surveyForms =
                             basicFormProvider.surveyFormsmediaFile != null
                                 ? [
                                     SurveyMediaModel(
                                       surveyLocalId:
-                                          "0", // set after inserting survey
+                                           widget.surveyListing!
+                                      .surveyId!, // set after inserting survey
                                       mediaType: 'survey',
                                       localPath: basicFormProvider
                                           .surveyFormsmediaFile!.path,
@@ -1245,6 +1211,25 @@ bool hasValidMedia(
                                     )
                                   ]
                                 : [];
+
+
+                                                //CONSENT FORM
+List<SurveyMediaModel> consentForm = [];
+
+// SURVEY FORMS (single file example)
+        consentForm = basicFormProvider.consentFiles.where(
+                (file) => file != null) // keep only non-null
+            .map((file) => SurveyMediaModel(
+                  surveyLocalId:  widget.surveyListing!
+                                      .surveyId!, // set after inserting survey
+                  mediaType: 'consent',
+                  serverMediaId: "",
+                  createdAt: 0,
+                  isdeleted: 0,
+                  localPath: file!.localPath,
+                  isSynced: 0, // not synced yet
+                ))
+            .toList();
                         SurveyModel survey = SurveyModel(
                             surveyId: widget.surveyListing!.surveyId.toString() ??
                                 "", // never null
@@ -1304,11 +1289,12 @@ bool hasValidMedia(
                             //     .toList(),
                             landPictures: landPictures,
                             surveyForms: surveyForms,
-                            consentForms: [],
+                            consentForms: consentForm,
                             isSurveyapproved: 0,
                             consentAvailable: 0,
                             isSync: 0,
                             serverSynced: widget.surveyListing!.serverSynced,
+                             needSynced:1,
                             selectedLanguage: Provider.of<AppProvider>(context, listen: false).currentLanguage,
                             surveyDate: widget.surveyListing!.surveyDate,
                             updatedsurveyDate: DateTime.now().millisecondsSinceEpoch,
@@ -1317,7 +1303,8 @@ bool hasValidMedia(
                             "Survey : ${widget.surveyListing!.id.toString()}");
 
                         final updatedRows = await DatabaseHelper.instance
-                            .updateSurvey(survey, widget.surveyListing!.id!);
+                            .updateSurveyBySurveyId(
+                                survey, widget.surveyListing!.surveyId!);
 //                             final match = RegExp(r'LS-(\d{4})-(\d+)').firstMatch(survey.surveyId!);
 // int surveyLocalId = 0;
 // if (match != null) {
@@ -1331,7 +1318,7 @@ bool hasValidMedia(
 
                             surveyForms: surveyForms,
 
-                            consentForms: [], // not available at creation time
+                            consentForms: consentForm, // not available at creation time
                           );
                         } else {
                           await DatabaseHelper.instance.insertSurveyMediaList(
@@ -1341,7 +1328,7 @@ bool hasValidMedia(
 
                             surveyForms: surveyForms,
 
-                            consentForms: [], // not available at creation time
+                            consentForms: consentForm, // not available at creation time
                           );
                         }
                         print("Survey : ${survey.surveyId}");
@@ -1402,6 +1389,23 @@ bool hasValidMedia(
                                     )
                                   ]
                                 : [];
+
+                                List<SurveyMediaModel> consentForm = [];
+
+// SURVEY FORMS (single file example)
+        consentForm = basicFormProvider.consentFiles.where(
+                (file) => file != null) // keep only non-null
+            .map((file) => SurveyMediaModel(
+                  surveyLocalId:  widget.surveyListing!
+                                      .surveyId!, // set after inserting survey
+                  mediaType: 'consent',
+                  serverMediaId: "",
+                  createdAt: 0,
+                  isdeleted: 0,
+                  localPath: file!.localPath,
+                  isSynced: 0, // not synced yet
+                ))
+            .toList();
                         SurveyModel survey = SurveyModel(
                             surveyId:
                                 await generateSurveyId() ?? "", // never null
@@ -1466,11 +1470,12 @@ bool hasValidMedia(
                             //     .toList(),
                             landPictures: landPictures,
                             surveyForms: surveyForms,
-                            consentForms: [],
+                            consentForms: consentForm,
                             isSurveyapproved: 0,
                             consentAvailable: 0,
                             isSync: 0,
                             serverSynced: 0,
+                            needSynced:1,
                             selectedLanguage: Provider.of<AppProvider>(context, listen: false).currentLanguage,
                             surveyDate: DateTime.now().millisecondsSinceEpoch,
                             updatedsurveyDate: DateTime.now().millisecondsSinceEpoch,
@@ -1489,7 +1494,7 @@ bool hasValidMedia(
 
                           surveyForms: surveyForms,
 
-                          consentForms: [], // not available at creation time
+                          consentForms: consentForm, // not available at creation time
                         );
 
                         print(
@@ -1617,43 +1622,85 @@ bool hasValidMedia(
 Future<String> generateSurveyId() async {
   final db = await DatabaseHelper.instance.database;
   final now = DateTime.now();
-  final year = now.year.toString(); // Current year as string
+  final currentYear = now.year; // e.g., 2026
 
-  // Check the latest survey for this year
+  // Check if there is already a sequence for this year
   final result = await db.query(
     'survey_sequence',
     where: 'yearMonth = ?',
-    whereArgs: [year],
+    whereArgs: [currentYear],
   );
 
   int nextSeq;
+
   if (result.isEmpty) {
-    // First survey of this year
+    // First survey of this year → reset sequence
     nextSeq = 1;
     await db.insert('survey_sequence', {
-      'yearMonth': year,
+      'yearMonth': currentYear,
       'lastSeq': nextSeq,
     });
   } else {
-    // Increment last sequence
+    // Increment last sequence for the current year
     final lastSeq = result.first['lastSeq'] as int;
     nextSeq = lastSeq + 1;
+
     await db.update(
       'survey_sequence',
       {'lastSeq': nextSeq},
       where: 'yearMonth = ?',
-      whereArgs: [year],
+      whereArgs: [currentYear],
     );
   }
 
   // Format sequence as 8-digit number with leading zeros
   final seqStr = nextSeq.toString().padLeft(8, '0');
 
-  // Construct surveyId like LS-2025-00000005
-  final surveyId = 'LS-$year-$seqStr';
-
+  // Construct surveyId like LS-2026-00000001
+  final surveyId = 'LS-$currentYear-$seqStr';
   return surveyId;
 }
+
+// Future<String> generateSurveyId() async {
+//   final db = await DatabaseHelper.instance.database;
+//   final now = DateTime.now();
+//   final year = now.year.toString(); // Current year as string
+
+//   // Check the latest survey for this year
+//   final result = await db.query(
+//     'survey_sequence',
+//     where: 'yearMonth = ?',
+//     whereArgs: [year],
+//   );
+
+//   int nextSeq;
+//   if (result.isEmpty) {
+//     // First survey of this year
+//     nextSeq = 1;
+//     await db.insert('survey_sequence', {
+//       'yearMonth': year,
+//       'lastSeq': nextSeq,
+//     });
+//   } else {
+//     // Increment last sequence
+//     final lastSeq = result.first['lastSeq'] as int;
+//     nextSeq = lastSeq + 1;
+//     await db.update(
+//       'survey_sequence',
+//       {'lastSeq': nextSeq},
+//       where: 'yearMonth = ?',
+//       whereArgs: [year],
+//     );
+//   }
+
+//   // Format sequence as 8-digit number with leading zeros
+//   final seqStr = nextSeq.toString().padLeft(8, '0');
+
+//   // Construct surveyId like LS-2025-00000005
+//   final surveyId = 'LS-$year-$seqStr';
+
+//   return surveyId;
+// }
 
 Future<void> updateSurveySequence(int year, int seq) async {
   final db = await DatabaseHelper.instance.database;

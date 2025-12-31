@@ -169,78 +169,7 @@ print(rows.length);
     };
   },
 ),
-      //   SearchableDropdown(
-      //     title: t(context, 'substation_village'),
-      //     hintText: t(context, "substation_village_hint"),
-      //       asyncItems: (filter, loadProps) async {
-      //       final stateList = await basicFormProvider.fet();
-
-      //       // Convert to Map<String, String>
-      //       final stateMaps = stateList.map((d) {
-      //         return {
-      //           'id': (d.id ?? 0).toString(),
-      //           'village_name': d.villageName ?? "",
-      //         };
-      //       }).toList();
-
-      //       if (filter.isEmpty) return stateMaps;
-
-      //       final lowerFilter = filter.toLowerCase();
-
-      //       return stateMaps.where((d) {
-      //         final idString = d['id']!;
-      //         final nameString = d['village_name']!.toLowerCase();
-
-      //         return idString.contains(lowerFilter) ||
-      //             nameString.contains(lowerFilter);
-      //       }).toList();
-      //     },
-      //     filterKeys: ['id', 'village_name'],
-      //     compareKey: 'id',
-      //     displayString: (item) => "${item['village_name']}",
-      //     selectedItem: (basicFormProvider.selectedsubstationVillage != null &&
-      //            basicFormProvider.selectedsubstationVillage!['id']!.isNotEmpty)
-      // ? basicFormProvider.selectedsubstationVillage
-      // : null,
-      //     onChanged: (value) {
-      //       print("Selected Village: $value");
-      //       basicFormProvider.selectedsubstationVillage = {
-      //         'id': "${value!['id']}",
-      //         'name': "${value['village_name']}",
-      //       };
-      //     },
-      //   ),
-
-// CustomTextFieldWidget(
-//   isMandatory: true,
-//   title: t(context, 'substation_district'),
-//   hintText: t(context, 'substation_district_hint'),
-//   onChange: (val) {},
-//   textEditingController: basicFormProvider.subStationDistrictController,
-//   autovalidateMode: AutovalidateMode.disabled,
-//   validator: basicFormProvider.validateState,
-// ),
-
-// CustomTextFieldWidget(
-//   isMandatory: true,
-//   title: t(context, 'substation_taluka'),
-//   hintText: t(context, 'substation_taluka_hint'),
-//   onChange: (val) {},
-//   textEditingController: basicFormProvider.subStationTalukaController,
-//   autovalidateMode: AutovalidateMode.disabled,
-//   validator: basicFormProvider.validateState,
-// ),
-
-// CustomTextFieldWidget(
-//   isMandatory: true,
-//   title: t(context, 'substation_village'),
-//   hintText: t(context, 'substation_village_hint'),
-//   onChange: (val) {},
-//   textEditingController: basicFormProvider.subStationVillageController,
-//   autovalidateMode: AutovalidateMode.disabled,
-//   validator: basicFormProvider.validateState,
-// ),
-
+   
         CustomTextFieldWidget(
           isMandatory: true,
           title: t(context, 'substation_lat'),

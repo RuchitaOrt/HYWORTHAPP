@@ -45,6 +45,25 @@ class AppProvider extends ChangeNotifier {
 
     notifyListeners();
   }
+Future<void> refreshConsentForSurvey(String surveyId) async {
+  final mediaList =
+      await DatabaseHelper.instance.getSurveyMedia(surveyId);
+
+  final consentMedia =
+      mediaList.where((m) => m.mediaType == 'consent').toList();
+
+  final index =
+      pendingsurveys.indexWhere((s) => s.surveyId == surveyId);
+
+  if (index != -1) {
+    final survey = pendingsurveys[index];
+
+    survey.consentForms.clear();       // 🔥 IMPORTANT
+    survey.consentForms.addAll(consentMedia);
+
+    notifyListeners();
+  }
+}
 
   Future<void> loadCompletedSurveys() async {
     //  _surveys = staticSurveys;
@@ -56,7 +75,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> loadSurveys() async {
     //  _surveys = staticSurveys;
     _Surveys = await DatabaseHelper.instance.getAllSurveys();
-    print("SURVEYLISTINGSCREEN appprovider");
+   
 
     await DatabaseHelper.instance.getAllSurveysWithCounts();
 
@@ -69,7 +88,7 @@ class AppProvider extends ChangeNotifier {
     for (var survey in surveys) {
       String surveyId = survey.surveyId!; // e.g., LS-2025-00000005
       final match = RegExp(r'LS-(\d{4})-(\d+)').firstMatch(surveyId);
-
+      // print("updateSurveySequencesFromLoadedSurveys");
       if (match != null) {
         final year = int.parse(match.group(1)!); // 2025
         final seq = int.parse(match.group(2)!); // 5
@@ -79,8 +98,41 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> updateSurveySequencesFromServer(String surveys) async {
+    // print("===============${surveys}======================");
+    // print("updateSurveySequencesFromServer");
+    String surveyId = surveys!; // e.g., LS-2025-00000005
+    final match = RegExp(r'LS-(\d{4})-(\d+)').firstMatch(surveyId);
+    // print("updateSurveySequencesFromLoadedSurveys");
+    if (match != null) {
+      final year = int.parse(match.group(1)!); // 2025
+      final seq = int.parse(match.group(2)!); // 5
+
+      await updateSurveySequence(year, seq); // update DB
+    }
+  }
+
+  Future<int?> getLatestSequenceYear() async {
+    final db = await DatabaseHelper.instance.database;
+
+    final result = await db
+        .rawQuery('SELECT MAX(yearMonth) as latestYear FROM survey_sequence');
+
+    final latestYear = result.first['latestYear'] as int?;
+    // print("🕒 Latest sequence year = $latestYear");
+    return latestYear;
+  }
+
   Future<void> updateSurveySequence(int year, int seq) async {
     final db = await DatabaseHelper.instance.database;
+
+    final latestYear = await getLatestSequenceYear();
+
+    // 🛑 Safety check
+    if (latestYear != null && year < latestYear) {
+      // print("⏭ Skipping update for old year $year (latest is $latestYear)");
+      return;
+    }
 
     final existing = await db.query(
       'survey_sequence',
@@ -88,13 +140,17 @@ class AppProvider extends ChangeNotifier {
       whereArgs: [year],
     );
 
+    // print("📦 Existing row for $year → $existing");
+
     if (existing.isEmpty) {
       await db.insert('survey_sequence', {
         'yearMonth': year,
         'lastSeq': seq,
       });
+      // print("➕ Inserted new year $year with seq $seq");
     } else {
       final lastSeq = existing.first['lastSeq'] as int;
+
       if (seq > lastSeq) {
         await db.update(
           'survey_sequence',
@@ -102,7 +158,68 @@ class AppProvider extends ChangeNotifier {
           where: 'yearMonth = ?',
           whereArgs: [year],
         );
+        // print("⬆ Updated $year sequence to $seq");
+      } else {
+        // print("⏭ No update needed for $year");
       }
+    }
+
+    await debugPrintSurveySequenceTable();
+  }
+
+  Future<void> keepOnlyLatestSequenceYear() async {
+    final db = await DatabaseHelper.instance.database;
+
+    final latestYear = await getLatestSequenceYear();
+    if (latestYear == null) return;
+
+    final deleted = await db.delete(
+      'survey_sequence',
+      where: 'yearMonth < ?',
+      whereArgs: [latestYear],
+    );
+
+    // print("🧹 Deleted $deleted old sequence rows");
+  }
+
+//   Future<void> updateSurveySequence(int year, int seq) async {
+//     final db = await DatabaseHelper.instance.database;
+//   print(year);
+//   print(seq);
+//     final existing = await db.query(
+//       'survey_sequence',
+//       where: 'yearMonth = ?',
+//       whereArgs: [year],
+//     );
+// print("updateSurveySequencesFromLoadedSurveys  ${existing}");
+//     if (existing.isEmpty) {
+//       await db.insert('survey_sequence', {
+//         'yearMonth': year,
+//         'lastSeq': seq,
+//       });
+//     } else {
+//       final lastSeq = existing.first['lastSeq'] as int;
+//       if (seq > lastSeq) {
+//         await db.update(
+//           'survey_sequence',
+//           {'lastSeq': seq},
+//           where: 'yearMonth = ?',
+//           whereArgs: [year],
+//         );
+//       }
+//     }
+
+//     print("updateSurveySequencesFromLoadedSurveys ${year} ${seq}");
+//    await debugPrintSurveySequenceTable();
+//   }
+  Future<void> debugPrintSurveySequenceTable() async {
+    final db = await DatabaseHelper.instance.database;
+
+    final rows = await db.query('survey_sequence');
+
+    // print("📊 survey_sequence table (${rows.length} rows)");
+    for (final row in rows) {
+      // print(row);
     }
   }
 
@@ -141,7 +258,7 @@ class AppProvider extends ChangeNotifier {
     _currentPage = 1;
     _hasMore = true;
 
-    print("🚀 Background land survey sync started");
+    // print("🚀 Background land survey sync started");
 
     while (_hasMore) {
       await _fetchLandListPage();
@@ -155,7 +272,7 @@ class AppProvider extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 150));
     }
 
-    print("✅ Background land survey sync completed");
+    // print("✅ Background land survey sync completed");
   }
 
   // Update an existing survey
@@ -192,7 +309,7 @@ class AppProvider extends ChangeNotifier {
     }
 
     final jsonbody = createRequestBody(_currentPage);
-    print("📤 Fetching page $_currentPage");
+    // print("📤 Fetching page list $_currentPage");
 
     APIManager().apiRequest(
       routeGlobalKey.currentContext!,
@@ -205,7 +322,9 @@ class AppProvider extends ChangeNotifier {
           _isLoading = false;
           return;
         }
-
+        // print("FETCH LAND LIST");
+        // print(resp.latest!.surveyId);
+        updateSurveySequencesFromServer(resp.latest!.surveyId);
         _totalPages = resp.pagination?.totalPages ?? 1;
         _hasMore = _currentPage < _totalPages;
 
@@ -214,16 +333,16 @@ class AppProvider extends ChangeNotifier {
         for (var detail in resp.data!) {
           // ---- YOUR EXISTING SAVE CODE (UNCHANGED) ----
           //  LAND IMAGES
-          print("RUCHI SURVEY IMAGE ID");
-          print(detail.surveyId);
-          print(detail.surveyLandImages.length);
+          // print("RUCHI SURVEY IMAGE ID");
+          // print(detail.surveyId);
+          // print(detail.surveyLandImages.length);
           // print(detail.surveyLandImages[0].mediaUrl);
           // print(detail.surveyLandImages[0].id.toString());
 
           List<SurveyMediaModel> landImages = [];
           for (var media in detail.surveyLandImages ?? []) {
             // Download the image and get the local file path
-            print(media);
+            // print(media);
             final localPath = await urlToLocalPath(media.mediaUrl);
             int surveyLocalId = 0;
             final match =
@@ -243,8 +362,8 @@ class AppProvider extends ChangeNotifier {
               localPath: localPath, // ✅ store downloaded local file path
               isSynced: 1,
             ));
-            print("LAND IMAGES");
-            print(landImages.length);
+            // print("LAND IMAGES RANGA");
+            // print(landImages.length);
             // print(landImages[0].localPath);
             // print(landImages[0].id);
           }
@@ -264,8 +383,8 @@ class AppProvider extends ChangeNotifier {
               localPath: localPath, // ✅ store downloaded local file path
               isSynced: 1,
             ));
-            print("otherImages IMAGES");
-            print(otherImages.length);
+            // print("otherImages IMAGES RANGA");
+            // print(otherImages.length);
           }
 
           List<SurveyMediaModel> consentImages = [];
@@ -284,8 +403,8 @@ class AppProvider extends ChangeNotifier {
               isSynced: 1,
             ));
           }
-          print("SURVEY OTHER IMAGES");
-          print(otherImages);
+          // print("SURVEY OTHER IMAGES");
+          // print(otherImages);
           // print(otherImages[0].id.toString());
           //    print(otherImages[0].localPath.toString());
 
@@ -299,7 +418,7 @@ class AppProvider extends ChangeNotifier {
           final survey = SurveyModel(
             id: detail.id, //detail.id ?? 0,
             surveyId: detail.surveyId ?? "",
-            userId: detail.createdBy?.toString() ?? "",
+            userId: detail.createdBy.toString() ?? "",
             landState: detail.landStateName ?? "",
             landLocation: detail.landLocation ?? "",
             landStateID: detail.landStateId?.toString() ?? "",
@@ -349,6 +468,7 @@ class AppProvider extends ChangeNotifier {
 
             selectedLanguage: detail.selectedLanguage ?? "en",
             serverSynced: 1,
+            needSynced: 0,
             surveyDate: detail.createdAt != null
                 ? DateTime.parse(detail.createdAt!).millisecondsSinceEpoch
                 : DateTime.now().millisecondsSinceEpoch,
@@ -356,17 +476,26 @@ class AppProvider extends ChangeNotifier {
                 ? DateTime.parse(detail.updatedAt!).millisecondsSinceEpoch
                 : DateTime.now().millisecondsSinceEpoch,
 
-            surveyStatus: detail.surveyStatus.toString(),
+            surveyStatus: detail.approvalStatus.approvalStatusName,
             substationDistrictID: detail.subStationDistrictId.toString(),
             substationVillageID: detail.subStationVillageId.toString(),
             substationTalukaID: detail.subStationTalukaId.toString(),
           );
-
+          // print("STATUS FETCH");
+          // print("${detail.approvalStatus.approvalStatusName}");
           final exists = await db.surveyExists(survey.surveyId!);
-          print("SURVEY OTHER landPictures");
-          print(survey.landPictures.length);
+          // print("SURVEY OTHER landPictures");
+          // print(survey.landPictures.length);
 
           if (exists) {
+             print("Exited SURVEY ID : ${survey.surveyId.toString()}");
+            final local =
+                await db.getSurveyBySurveyId(survey.surveyId.toString());
+
+            if (local != null && local.needSynced == 1) {
+              print("⏭️ Skip overwrite — local has unsynced changes");
+              continue;
+            }
             int insertedCount =
                 await DatabaseHelper.instance.upsertSurveyMediaList(
               surveyLocalId: survey.surveyId!, // keep as String
@@ -403,13 +532,20 @@ class AppProvider extends ChangeNotifier {
           print("totalmedia ${totalmedia.toString()}");
 
           if (exists) {
-            await db.updateSurvey(survey, surveyLocalId);
+            final local = await db.getSurveyBySurveyId(survey.surveyId!);
+
+            if (local != null && local.needSynced == 1) {
+              print("⏭️ Skip overwrite — local has unsynced changes");
+              continue;
+            }
+            await db.updateSurveyBySurveyId(survey, survey.surveyId!);
           } else {
             await db.insertSurvey(survey);
           }
-          db.printAllSurveys(survey.surveyId!);
+          // db.printAllSurveys(survey.surveyId!);
         }
 
+// updateSurveySequence(2025,00000001);
         _currentPage++;
         _isLoading = false;
         notifyListeners();

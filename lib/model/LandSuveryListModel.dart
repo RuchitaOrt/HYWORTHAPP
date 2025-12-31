@@ -1,10 +1,14 @@
 class SurveyResponse {
-  bool success;
-  List<SurveyData> data;
-  Pagination pagination;
+  final bool success;
+  final String message;
+  final SurveyData? latest;
+  final List<SurveyData> data;
+  final Pagination pagination;
 
   SurveyResponse({
     required this.success,
+    required this.message,
+    this.latest,
     required this.data,
     required this.pagination,
   });
@@ -12,21 +16,17 @@ class SurveyResponse {
   factory SurveyResponse.fromJson(Map<String, dynamic> json) {
     return SurveyResponse(
       success: json['success'] ?? false,
-      data: (json['data'] as List<dynamic>?)
-              ?.map((e) => SurveyData.fromJson(e))
-              .toList() ??
-          [],
+      message: json['message'] ?? '',
+      latest: json['latest'] != null
+          ? SurveyData.fromJson(json['latest'])
+          : null,
+      data: (json['data'] as List<dynamic>? ?? [])
+          .map((e) => SurveyData.fromJson(e))
+          .toList(),
       pagination: Pagination.fromJson(json['pagination'] ?? {}),
     );
   }
-
-  Map<String, dynamic> toJson() => {
-        'success': success,
-        'data': data.map((e) => e.toJson()).toList(),
-        'pagination': pagination.toJson(),
-      };
 }
-
 class SurveyData {
   int id;
   String surveyId;
@@ -340,235 +340,3 @@ class Pagination {
       };
 }
 
-
-// import 'dart:convert';
-
-// SurveyListResponse surveyListResponseFromJson(String str) =>
-//     SurveyListResponse.fromJson(json.decode(str));
-
-// class SurveyListResponse {
-//   bool? success;
-//   List<SurveyData>? data;
-
-//   SurveyListResponse({this.success, this.data});
-
-//   factory SurveyListResponse.fromJson(Map<String, dynamic> json) =>
-//       SurveyListResponse(
-//         success: json["success"],
-//         data: json["data"] == null
-//             ? []
-//             : List<SurveyData>.from(
-//                 json["data"].map((x) => SurveyData.fromJson(x))),
-//       );
-// }
-
-// class SurveyData {
-//   int? id;
-//   String? surveyId;
-//   String? landLocation;
-//   int? landStateId;
-//   String? landStateName;
-//   int? landDistrictId;
-//   String? landDistrictName;
-//   int? landTalukaId;
-//   String? landTalukaName;
-//   int? landVillageId;
-//   String? landVillageName;
-//   String? landLatitude;
-//   String? landLongitude;
-//   String? landAreaInAcres;
-//   int? landType;
-//   String? landRateCommercialEscalation;
-//   String? subStationName;
-//   int? subStationDistrictId;
-//   String? subStationDistrictName;
-//   int? subStationTalukaId;
-//   String? subStationTalukaName;
-//   int? subStationVillageId;
-//   String? subStationVillageName;
-//   String? subStationLatitude;
-//   String? subStationLongitude;
-//   String? subStationInchargeContact;
-//   String? subStationInchargeName;
-//   String? operatorName;
-//   String? operatorContact;
-//   String? subStationVoltageLevel;
-//   String? subStationCapacity;
-//   String? distanceSubStationToLand;
-//   String? plotDistanceFromMainRoad;
-//   String? evacuationLevel;
-//   String? soilType;
-//   String? windZone;
-//   String? groundWaterRainfall;
-//   String? nearestHighway;
-//   int? consentAvailable;
-//   int? isSync;
-//   int? isSurveyApproved;
-//   String? selectedLanguage;
-//   int? surveyStatus;
-//   String? createdAt;
-//   String? updatedAt;
-//   dynamic deletedAt;
-//   int? createdBy;
-//   int? updatedBy;
-//   dynamic deletedBy;
-//   List<ImageModel>? consents;
-//   List<ImageModel>? surveyLandImages;
-//   List<ImageModel>? surveyOtherDetailsImages;
-//   ApprovalStatus? approvalStatus;
-
-//   SurveyData({
-//     this.id,
-//     this.surveyId,
-//     this.landLocation,
-//     this.landStateId,
-//     this.landStateName,
-//     this.landDistrictId,
-//     this.landDistrictName,
-//     this.landTalukaId,
-//     this.landTalukaName,
-//     this.landVillageId,
-//     this.landVillageName,
-//     this.landLatitude,
-//     this.landLongitude,
-//     this.landAreaInAcres,
-//     this.landType,
-//     this.landRateCommercialEscalation,
-//     this.subStationName,
-//     this.subStationDistrictId,
-//     this.subStationDistrictName,
-//     this.subStationTalukaId,
-//     this.subStationTalukaName,
-//     this.subStationVillageId,
-//     this.subStationVillageName,
-//     this.subStationLatitude,
-//     this.subStationLongitude,
-//     this.subStationInchargeContact,
-//     this.subStationInchargeName,
-//     this.operatorName,
-//     this.operatorContact,
-//     this.subStationVoltageLevel,
-//     this.subStationCapacity,
-//     this.distanceSubStationToLand,
-//     this.plotDistanceFromMainRoad,
-//     this.evacuationLevel,
-//     this.soilType,
-//     this.windZone,
-//     this.groundWaterRainfall,
-//     this.nearestHighway,
-//     this.consentAvailable,
-//     this.isSync,
-//     this.isSurveyApproved,
-//     this.selectedLanguage,
-//     this.surveyStatus,
-//     this.createdAt,
-//     this.updatedAt,
-//     this.deletedAt,
-//     this.createdBy,
-//     this.updatedBy,
-//     this.deletedBy,
-//     this.consents,
-//     this.surveyLandImages,
-//     this.surveyOtherDetailsImages,
-//     this.approvalStatus,
-//   });
-
-//   factory SurveyData.fromJson(Map<String, dynamic> json) => SurveyData(
-//         id: json["id"],
-//         surveyId: json["survey_id"],
-//         landLocation: json["land_location"],
-//         landStateId: json["land_state_id"],
-//         landStateName: json["land_state_name"],
-//         landDistrictId: json["land_district_id"],
-//         landDistrictName: json["land_district_name"],
-//         landTalukaId: json["land_taluka_id"],
-//         landTalukaName: json["land_taluka_name"],
-//         landVillageId: json["land_village_id"],
-//         landVillageName: json["land_village_name"],
-//         landLatitude: json["land_latitude"],
-//         landLongitude: json["land_longitude"],
-//         landAreaInAcres: json["land_area_in_acres"],
-//         landType: json["land_type"],
-//         landRateCommercialEscalation:
-//             json["land_rate_commercial_escalation"],
-//         subStationName: json["sub_station_name"],
-//         subStationDistrictId: json["sub_station_district_id"],
-//         subStationDistrictName: json["sub_station_district_name"],
-//         subStationTalukaId: json["sub_station_taluka_id"],
-//         subStationTalukaName: json["sub_station_taluka_name"],
-//         subStationVillageId: json["sub_station_village_id"],
-//         subStationVillageName: json["sub_station_village_name"],
-//         subStationLatitude: json["sub_station_latitude"],
-//         subStationLongitude: json["sub_station_longitude"],
-//         subStationInchargeContact: json["sub_station_incharge_contact"],
-//         subStationInchargeName: json["sub_station_incharge_name"],
-//         operatorName: json["operator_name"],
-//         operatorContact: json["operator_contact"],
-//         subStationVoltageLevel: json["sub_station_voltage_level"],
-//         subStationCapacity: json["sub_station_capacity"],
-//         distanceSubStationToLand: json["distance_sub_station_to_land"],
-//         plotDistanceFromMainRoad: json["plot_distance_from_main_road"],
-//         evacuationLevel: json["evacuation_level"],
-//         soilType: json["soil_type"],
-//         windZone: json["wind_zone"],
-//         groundWaterRainfall: json["ground_water_rainfall"],
-//         nearestHighway: json["nearest_highway"],
-//         consentAvailable: json["consent_available"],
-//         isSync: json["is_sync"],
-//         isSurveyApproved: json["is_survey_approved"],
-//         selectedLanguage: json["selected_language"],
-//         surveyStatus: json["survey_status"],
-//         createdAt: json["created_at"],
-//         updatedAt: json["updated_at"],
-//         deletedAt: json["deleted_at"],
-//         createdBy: json["created_by"],
-//         updatedBy: json["updated_by"],
-//         deletedBy: json["deleted_by"],
-//         consents: json["consents"] == null
-//             ? []
-//             : List<ImageModel>.from(
-//                 json["consents"].map((x) => ImageModel.fromJson(x))),
-//         surveyLandImages: json["survey_land_images"] == null
-//             ? []
-//             : List<ImageModel>.from(
-//                 json["survey_land_images"].map((x) => ImageModel.fromJson(x))),
-//         surveyOtherDetailsImages: json["survey_other_details_images"] == null
-//             ? []
-//             : List<ImageModel>.from(json["survey_other_details_images"]
-//                 .map((x) => ImageModel.fromJson(x))),
-//         approvalStatus: json["approval_status"] == null
-//             ? null
-//             : ApprovalStatus.fromJson(json["approval_status"]),
-//       );
-// }
-
-// class ImageModel {
-//   int? id;
-//   int? status;
-//   String? createdAt;
-//   String? mediaUrl;
-
-//   ImageModel({this.id, this.status, this.createdAt, this.mediaUrl});
-
-//   factory ImageModel.fromJson(Map<String, dynamic> json) => ImageModel(
-//         id: json["id"],
-//         status: json["status"],
-//         createdAt: json["created_at"],
-//         mediaUrl: json["media_url"],
-//       );
-// }
-
-// class ApprovalStatus {
-//   int? id;
-//   String? approvalStatusName;
-
-//   ApprovalStatus({
-//     this.id,
-//     this.approvalStatusName,
-//   });
-
-//   factory ApprovalStatus.fromJson(Map<String, dynamic> json) => ApprovalStatus(
-//         id: json["id"],
-//         approvalStatusName: json["approval_status_name"],
-//       );
-// }
