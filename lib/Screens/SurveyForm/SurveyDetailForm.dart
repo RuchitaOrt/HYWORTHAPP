@@ -206,48 +206,15 @@ class _DetailFormState extends State<DetailForm> {
       provider.nearestHighwayController.text =
           widget.surveyListing!.nearestHighway!;
 
-      _loadMediaForEdit(provider);
+      // _loadMediaForEdit(provider);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+    
+      _loadMediaForEdit(
+        Provider.of<BasicFormProvider>(context, listen: false),
+      );
+    
+  });
 
-//       if (widget.surveyListing?.surveyForms != null &&
-//           widget.surveyListing!.surveyForms.isNotEmpty) {
-//         final surveyFormMedia = widget.surveyListing!.surveyForms.first;
-//         print("EDITS RUCHITA");
-//         print(widget.surveyListing?.surveyForms[0].localPath);
-//         print(widget.surveyListing?.surveyForms[0].mediaType);
-//                 print(widget.surveyListing?.surveyForms[0].id.toString());
-//         print(surveyFormMedia.id.toString());
-//         print(widget.surveyListing?.surveyForms[0].id.toString());
-//         if (surveyFormMedia.localPath.isNotEmpty) {
-//           final file = File(surveyFormMedia.localPath);
-//           widget.surveyListing!.surveyForms[0].localPath != file;
-//           widget.surveyListing!.surveyForms[0].id != surveyFormMedia.id;
-//           provider.setImage(
-//             file,
-//             surveyFormMedia.id // 🔹 store ID here
-//           );
-//         }
-//       }
-//  print("EDITS RUCHITA landPictures");
-// // Load land pictures (multiple files)
-//       if (widget.surveyListing?.landPictures != null &&
-//           widget.surveyListing!.landPictures!.isNotEmpty) {
-//         final landMedias = widget.surveyListing!.landPictures;
-//         print("EDITS RUCHITA landPictures");
-//         print(widget.surveyListing?.landPictures[0].localPath);
-//         print(widget.surveyListing?.landPictures[0].mediaType);
-//                 print(widget.surveyListing?.landPictures[0].id.toString());
-
-//         print(widget.surveyListing?.landPictures[0].id.toString());
-//         provider.OtherLandmediaFiles.clear();
-//         provider.OtherLandmediaFiles.addAll(
-//           landMedias.map((media) => File(media.localPath)).toList(),
-//         );
-
-//         // If your provider needs to set them individually
-//         for (int i = 0; i < landMedias.length; i++) {
-//           provider.setMediaFile(i, File(landMedias[i].localPath));
-//         }
-//       }
     }
   }
 
@@ -260,8 +227,13 @@ class _DetailFormState extends State<DetailForm> {
     }
     print("EDIT MEDIA FROM DB ${widget.surveyListing!.surveyId.toString()}");
     print("EDIT MEDIA FROM DB ${surveyLocalId}");
-    final mediaList = await DatabaseHelper.instance
-        .getSurveyMedia(widget.surveyListing!.surveyId.toString());
+    final mediaList =
+    //  await DatabaseHelper.instance
+    //     .getSurveyMedia(widget.surveyListing!.surveyId.toString());
+
+        await DatabaseHelper.instance.safeDb(
+  (db) => DatabaseHelper.instance.getSurveyMedia(widget.surveyListing!.surveyId.toString()),
+);
     print("EDIT MEDIA FROM DB");
     print(mediaList.length);
     final surveyForms =
@@ -380,8 +352,14 @@ class _DetailFormState extends State<DetailForm> {
         print("canSync Update");
         print("LAND canSync Update");
         print(canSync);
-        final mediaList = await DatabaseHelper.instance
-            .getSurveyMedia(widget.surveyListing!.surveyId.toString());
+          print("MEDIA LISTING");
+        final mediaList = 
+        await DatabaseHelper.instance.safeDb(
+  (db) => DatabaseHelper.instance.getSurveyMedia(widget.surveyListing!.surveyId.toString()),
+);
+
+        // await DatabaseHelper.instance
+        //     .getSurveyMedia(widget.surveyListing!.surveyId.toString());
         print("EDIT MEDIA FROM DB");
         print(mediaList.length);
         final surveyFormsMedia =
@@ -1358,7 +1336,7 @@ List<SurveyMediaModel> consentForm = [];
                             surveyLocalId: "0",
                             mediaType: 'survey',
 
-                            serverMediaId: media.server_media_id.toString(),
+                            serverMediaId: media.server_media_id.toString() ?? "",
                             createdAt: 0,
                             isdeleted: 0,
                             localPath: media

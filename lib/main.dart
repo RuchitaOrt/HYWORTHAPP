@@ -1,3 +1,4 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -44,18 +45,53 @@ void main() async {
   await initNotifications(); // 🔥 REQUIRED
   await requestNotificationPermission();
   await Utility().loadAPIConfig();
+// Initialize Workmanager
+await Workmanager().initialize(
+  callbackDispatcher,
+  isInDebugMode: true,
+);
+
+// Register periodic task to cover network off scenario
+await Workmanager().registerPeriodicTask(
+  "syncTaskPeriodic",
+  syncTask,
+  frequency: const Duration(minutes: 60),
+  constraints: Constraints(
+    networkType: NetworkType.connected,
+  ),
+);
+
+// Optional: listen to connectivity for instant trigger
+Connectivity().onConnectivityChanged.listen((status) {
+  if (status != ConnectivityResult.none) {
+    Workmanager().registerOneOffTask(
+      "syncTaskImmediate",
+      syncTask,
+      constraints: Constraints(networkType: NetworkType.connected),
+    );
+  }
+});
 
 //  //Initialize Workmanager
-  await Workmanager().initialize(
-    callbackDispatcher,
-    isInDebugMode: true, // prints logs for debugging
-  );
-  await Workmanager().registerOneOffTask(
-    "testTask",
-    syncTask,
-    initialDelay: Duration(seconds: 5), // triggers 5s after app start
-  );
-
+  // await Workmanager().initialize(
+  //   callbackDispatcher,
+  //   isInDebugMode: true, // prints logs for debugging
+  // );
+ 
+// await Workmanager().registerOneOffTask(
+//   "syncTask",
+//   syncTask,
+//   constraints: Constraints(
+//     networkType: NetworkType.connected, // 🔥 CRITICAL
+//   ),
+//   backoffPolicy: BackoffPolicy.linear,
+//   backoffPolicyDelay: const Duration(minutes: 2),
+// );
+ // await Workmanager().registerOneOffTask(
+  //   "testTask",
+  //   syncTask,
+  //   initialDelay: Duration(seconds: 5), // triggers 5s after app start
+  // );
   // await Workmanager().registerPeriodicTask(
   //   "backgroundSync",
   //   "syncSurveyData",

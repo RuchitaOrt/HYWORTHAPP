@@ -4,8 +4,10 @@ import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Screens/LocationHelper.dart';
 import 'package:hyworth_land_survey/Utils/CommonStyles.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
+import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 import 'package:hyworth_land_survey/Utils/commonstrings.dart';
+import 'package:hyworth_land_survey/Utils/internetConnection.dart';
 import 'package:hyworth_land_survey/Utils/sizeConfig.dart';
 import 'package:hyworth_land_survey/widgets/CustomDropdownField.dart';
 import 'package:hyworth_land_survey/widgets/SearchableDropdown.dart';
@@ -29,8 +31,16 @@ class _BasicDetailsFormState extends State<BasicDetailsForm> {
       askLocationConfirmation(context, "Basic");
     });
   }
-String stateCode="";
-String districtCode="";
+
+  final FocusNode _focusSink = FocusNode();
+  @override
+  void dispose() {
+    _focusSink.dispose();
+    super.dispose();
+  }
+
+  String stateCode = "";
+  String districtCode = "";
   @override
   Widget build(BuildContext context) {
     final basicFormProvider = Provider.of<BasicFormProvider>(context);
@@ -58,73 +68,75 @@ String districtCode="";
         //   validator: basicFormProvider.validateState,
         // ),
 
-        SearchableDropdown(
-          title: t(context, 'land_state'),
-          hintText: t(context, "land_state_hint"),
-          selectedItem: (basicFormProvider.selectedLandState != null &&
-                  basicFormProvider.selectedLandState!['id']!.isNotEmpty)
-              ? basicFormProvider.selectedLandState
-              : null, // null = show hint
-          asyncItems: (filter, loadProps) async {
-            final stateList = await basicFormProvider.fetchStates();
+        GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: SearchableDropdown(
+            title: t(context, 'land_state'),
+            hintText: t(context, "land_state_hint"),
+            selectedItem: (basicFormProvider.selectedLandState != null &&
+                    basicFormProvider.selectedLandState!['id']!.isNotEmpty)
+                ? basicFormProvider.selectedLandState
+                : null, // null = show hint
+            asyncItems: (filter, loadProps) async {
+              final stateList = await basicFormProvider.fetchStates();
 
-            // Convert to Map<String, String>
-            final stateMaps = stateList.map((d) {
-              return {
-                'id': (d.id ?? 0).toString(),
-                'name': d.name ?? "",
-                "statecode":d.stateCode ?? ""
-                
+              // Convert to Map<String, String>
+              final stateMaps = stateList.map((d) {
+                return {
+                  'id': (d.id ?? 0).toString(),
+                  'name': d.name ?? "",
+                  "statecode": d.stateCode ?? ""
+                };
+              }).toList();
+              print("State");
+              print(stateMaps.length);
+              if (filter.isEmpty) return stateMaps;
+
+              final lowerFilter = filter.toLowerCase();
+
+              return stateMaps.where((d) {
+                final idString = d['id']!;
+                final nameString = d['name']!.toLowerCase();
+
+                return idString.contains(lowerFilter) ||
+                    nameString.contains(lowerFilter);
+              }).toList();
+            },
+
+            filterKeys: ['id', 'name'],
+            compareKey: 'id',
+            displayString: (item) => "${item['name']}",
+            onChanged: (value) {
+              print("Selected State: $value");
+              basicFormProvider.selectedLandState = {
+                'id': "${value!['id']}",
+                'name': "${value['name']}",
+                "statecode": "${value['statecode']}",
               };
-            }).toList();
-print("State");
-print(stateMaps.length);
-            if (filter.isEmpty) return stateMaps;
-
-            final lowerFilter = filter.toLowerCase();
-
-            return stateMaps.where((d) {
-              final idString = d['id']!;
-              final nameString = d['name']!.toLowerCase();
-
-              return idString.contains(lowerFilter) ||
-                  nameString.contains(lowerFilter);
-            }).toList();
-          },
-           
-          filterKeys: ['id', 'name'],
-          compareKey: 'id',
-          displayString: (item) => "${item['name']}",
-          onChanged: (value) {
-            print("Selected State: $value");
-            basicFormProvider.selectedLandState = {
-              'id': "${value!['id']}",
-              'name': "${value['name']}",
-               "statecode":"${value['statecode']}",
-            };
-print("Selected Statre: $value");
-            stateCode=value['statecode'].toString();
-            print("Selected Statre: ${value['statecode'].toString()}");
-
-          },
+              print("Selected Statre: $value");
+              stateCode = value['statecode'].toString();
+              _moveFocusAway();
+            },
+          ),
         ),
 
         SearchableDropdown(
           title: t(context, 'land_district'),
           hintText: t(context, "select_district"),
           asyncItems: (filter, loadProps) async {
-            final districtList = await basicFormProvider.fetchDistrict(stateCode: stateCode);
+            final districtList =
+                await basicFormProvider.fetchDistrict(stateCode: stateCode);
 
             // Convert to Map<String, String>
             final stateMaps = districtList.map((d) {
               return {
                 'id': (d.id).toString(),
                 'district_name': d.districtName ?? "",
-                'districtcode':d.districtCode ??""
+                'districtcode': d.districtCode ?? ""
               };
             }).toList();
- print("District");
-print(stateMaps.length);
+            print("District");
+            print(stateMaps.length);
             if (filter.isEmpty) return stateMaps;
 
             final lowerFilter = filter.toLowerCase();
@@ -136,9 +148,7 @@ print(stateMaps.length);
               return idString.contains(lowerFilter) ||
                   nameString.contains(lowerFilter);
             }).toList();
-            
           },
-          
           filterKeys: ['id', 'district_name'],
           selectedItem: (basicFormProvider.selectedLandDistrict != null &&
                   basicFormProvider.selectedLandDistrict!['id']!.isNotEmpty)
@@ -151,11 +161,12 @@ print(stateMaps.length);
             basicFormProvider.selectedLandDistrict = {
               'id': "${value!['id']}",
               'district_name': "${value!['district_name']}",
-              'districtcode':"${value!['districtcode']}",
+              'districtcode': "${value!['districtcode']}",
             };
 
-             districtCode=value['districtcode'].toString();
-             print("districtCode selected ${districtCode}");
+            districtCode = value['districtcode'].toString();
+            print("districtCode selected ${districtCode}");
+            _moveFocusAway();
           },
         ),
 // Taluka dropdown
@@ -163,18 +174,19 @@ print(stateMaps.length);
           title: t(context, 'land_taluka'),
           hintText: t(context, "select_taluka"),
           asyncItems: (filter, loadProps) async {
-            final talukaList = await basicFormProvider.fetchTaluka(districtCode:districtCode );
+            final talukaList =
+                await basicFormProvider.fetchTaluka(districtCode: districtCode);
 
             // Convert to Map<String, String>
             final talukaMaps = talukaList.map((d) {
               return {
-                'id': (d.id ).toString(),
+                'id': (d.id).toString(),
                 'taluka_name': d.talukaName ?? "",
-                'districtcode':d.districtCode ??""
+                'districtcode': d.districtCode ?? ""
               };
             }).toList();
             print("TALUKA");
-print(talukaMaps.length);
+            print(talukaMaps.length);
             if (filter.isEmpty) return talukaMaps;
 
             final lowerFilter = filter.toLowerCase();
@@ -199,50 +211,47 @@ print(talukaMaps.length);
             basicFormProvider.selectedLandTaluka = {
               'id': "${value!['id']}",
               'taluka_name': "${value!['taluka_name']}",
-              "districtcode":"${value!['districtcode']}",
+              "districtcode": "${value!['districtcode']}",
             };
-             districtCode=value['districtcode'].toString();
-             print("districtCode selected ${districtCode}");
+            districtCode = value['districtcode'].toString();
+            print("districtCode selected ${districtCode}");
+            _moveFocusAway();
           },
         ),
 
 // Village dropdown
-SearchableDropdown(
-  title: t(context, 'land_village'),
-  hintText: t(context, "select_village"),
+        SearchableDropdown(
+          title: t(context, 'land_village'),
+          hintText: t(context, "select_village"),
+          selectedItem: (basicFormProvider.selectedLandVillage != null &&
+                  basicFormProvider.selectedLandVillage!['id']!.isNotEmpty)
+              ? basicFormProvider.selectedLandVillage
+              : null,
+          asyncItems: (filter, loadProps) async {
+            final rows = await basicFormProvider.searchVillage(filter,
+                districtCode: districtCode);
+            print("Village");
+            print(rows.length);
+            return rows.map<Map<String, String>>((e) {
+              return {
+                'id': e['id'].toString(),
+                'village_name': (e['village_name'] ?? "").toString(),
+              };
+            }).toList();
+          },
+          filterKeys: ['id', 'village_name'],
+          compareKey: 'id',
+          displayString: (item) => item['village_name'] ?? "",
+          onChanged: (value) {
+            basicFormProvider.selectedLandVillage = {
+              'id': value!['id']!,
+              'village_name': value['village_name']!,
+            };
 
-  selectedItem: (basicFormProvider.selectedLandVillage != null &&
-          basicFormProvider.selectedLandVillage!['id']!.isNotEmpty)
-      ? basicFormProvider.selectedLandVillage
-      : null,
+            _moveFocusAway();
+          },
+        ),
 
-asyncItems: (filter, loadProps) async {
-  final rows = await basicFormProvider.searchVillage(filter,districtCode: districtCode);
-        print("Village");
-print(rows.length);
-  return rows.map<Map<String, String>>((e) {
-    return {
-      'id': e['id'].toString(),
-      'village_name': (e['village_name'] ?? "").toString(),
-    };
-  }).toList();
-
-  
-},
-
-  filterKeys: ['id', 'village_name'],
-  compareKey: 'id',
-  displayString: (item) => item['village_name'] ?? "",
-
-  onChanged: (value) {
-    basicFormProvider.selectedLandVillage = {
-      'id': value!['id']!,
-      'village_name': value['village_name']!,
-    };
-  },
-),
-
-      
         CustomTextFieldWidget(
           isMandatory: true,
           title: t(context, 'land_lat'),
@@ -253,8 +262,15 @@ print(rows.length);
             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
           ],
           suffixIcon: GestureDetector(
-              onTap: () {
-                askLocationConfirmation(context, "Basic");
+              onTap: () async {
+                var status1 =
+                    await ConnectionDetector.checkInternetConnection();
+                if (status1) {
+                  askLocationConfirmation(context, "Basic");
+                } else {
+                  showToast(
+                      "No Internet Connection Please fill location manually");
+                }
               },
               child: Icon(
                 Icons.location_on,
@@ -275,8 +291,15 @@ print(rows.length);
             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
           ],
           suffixIcon: GestureDetector(
-              onTap: () {
-                askLocationConfirmation(context, "Basic");
+              onTap: () async {
+                var status1 =
+                    await ConnectionDetector.checkInternetConnection();
+                if (status1) {
+                  askLocationConfirmation(context, "Basic");
+                } else {
+                  showToast(
+                      "No Internet Connection Please fill location manually");
+                }
               },
               child: Icon(
                 Icons.location_on,
@@ -351,7 +374,15 @@ print(rows.length);
 
         /// Substation Details Section
         SizedBox(height: SizeConfig.blockSizeVertical * 2),
+        Focus(
+          focusNode: _focusSink,
+          child: const SizedBox.shrink(),
+        ),
       ],
     );
+  }
+
+  void _moveFocusAway() {
+    FocusScope.of(context).requestFocus(_focusSink);
   }
 }

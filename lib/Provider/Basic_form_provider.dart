@@ -913,7 +913,7 @@ print("----INSERTION AFTER DELETED----");
        Navigator.of(routeGlobalKey.currentContext!).pop();
     }
   }
-  Future<void> submitMultipleLandSurvey(SurveyModel surveyModel) async {
+  Future<bool> submitMultipleLandSurvey(SurveyModel surveyModel) async {
     var uri = Uri.parse(APIManager.createLAndSurvey);
 
     // Creating a multipart request
@@ -1275,7 +1275,7 @@ print("----INSERTION AFTER DELETED----");
         
         showToast(jsonResponse['message']);
       }
-     
+     return true;
     } else {
       var responseData = await response.stream.bytesToString();
       print('Response: $responseData');
@@ -1283,7 +1283,7 @@ print("----INSERTION AFTER DELETED----");
       // Failure
       print('Error: ${response.statusCode}');
       showToast("Server Not Responding ${response.statusCode}");
-      
+      return false;
     }
   }
 
@@ -1848,7 +1848,7 @@ print("----INSERTION AFTER DELETED----");
 //UPDATE MULTIPLE
 
 
- Future<void> updateMultipleLandSurvey(SurveyModel surveyModel,int id) async {
+Future<bool> updateMultipleLandSurvey(SurveyModel surveyModel,int id) async {
     var uri = Uri.parse(APIManager.updateLAndSurvey);
 
     // Creating a multipart request
@@ -2235,14 +2235,14 @@ print("----INSERTION AFTER DELETED----");
           } else {
             print("⚠️ No survey found to update");
           }
-    
+    return true;
     } else {
       var responseData = await response.stream.bytesToString();
       print('Response: $responseData');
       print('Error: ${response.statusCode}');
       // Failure
       print('Error: ${response.statusCode}');
-     
+     return false;
     }
   }
 

@@ -9,13 +9,21 @@ import 'package:hyworth_land_survey/model/LandVillagesModel.dart';
 import 'package:hyworth_land_survey/model/SurveyModel.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:synchronized/synchronized.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
 
   DatabaseHelper._init();
+  final Lock _dbLock = Lock();
 
+  Future<T> safeDb<T>(Future<T> Function(Database db) action) async {
+    final db = await database;
+    return _dbLock.synchronized(() async {
+      return await action(db);
+    });
+  }
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDB('survey.db');
@@ -176,6 +184,14 @@ Future<List<SurveyModel>> getSurveysNeedingSync() async {
   lastSeq INTEGER
 );
 ''');
+ await db.execute('''CREATE TABLE IF NOT EXISTS sync_state (
+  key TEXT PRIMARY KEY,
+  value INTEGER
+);
+''');
+
+
+
   }
 
   Future<void> insertSurveyMedia({
@@ -196,6 +212,27 @@ Future<List<SurveyModel>> getSurveysNeedingSync() async {
     });
   }
   
+Future<int?> getSyncState(String key) async {
+  final db = await database;
+  final res =
+      await db.query('sync_state', where: 'key = ?', whereArgs: [key]);
+  if (res.isEmpty) return null;
+  return res.first['value'] as int;
+}
+
+Future<void> setSyncState(String key, int value) async {
+  final db = await database;
+  await db.insert(
+    'sync_state',
+    {'key': key, 'value': value},
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+}
+
+Future<void> clearSyncState(String key) async {
+  final db = await database;
+  await db.delete('sync_state', where: 'key = ?', whereArgs: [key]);
+}
 
   Future<int> insertSurveyMediaList({
     required String surveyLocalId,
@@ -889,4 +926,17 @@ Future<SurveyModel?> getSurveyBySurveyId(String surveyId) async {
     final dbClient = await database;
     return await dbClient.rawUpdate(query, arguments);
   }
+  Future<void> markSurveySynced(String surveyId) async {
+  final db = await database;
+  await db.update(
+    'surveys',
+    {
+      'needSynced': 0,
+      'serverSynced': 1,
+    },
+    where: 'surveyId = ?',
+    whereArgs: [surveyId],
+  );
+}
+
 }

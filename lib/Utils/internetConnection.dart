@@ -1,6 +1,13 @@
 import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
+
 class ConnectionDetector {
+//  static Future<bool> checkInternetConnection() async {
+//   final connectivity = await Connectivity().checkConnectivity();
+//   return connectivity != ConnectivityResult.none;
+// }
+
   static Future<bool> checkInternetConnection() async {
     bool isInternetAvailable = false;
     try {

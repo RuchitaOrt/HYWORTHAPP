@@ -4,12 +4,17 @@ import 'package:geolocator/geolocator.dart';
 import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Utils/CommonStyles.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
+import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
+import 'package:hyworth_land_survey/Utils/internetConnection.dart';
 import 'package:hyworth_land_survey/widgets/CaptureLocation.dart';
 import 'package:provider/provider.dart';
 
 Future<void> askLocationConfirmation(
     BuildContext context, String formType) async {
-  final result = await showDialog<bool>(
+        var status1 =
+                          await ConnectionDetector.checkInternetConnection();
+      if(status1)
+      {  final result = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: Text(t(context, "confirm_location")),
@@ -40,6 +45,9 @@ Future<void> askLocationConfirmation(
     _pickLocation(context, formType);
     // captureLocation(context);
   }
+      }else{
+        // showToast("No Internet Connection Please fill location manually");
+      }
 }
 
 void _pickLocation(BuildContext context, String formType) async {

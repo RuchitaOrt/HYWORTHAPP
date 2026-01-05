@@ -50,18 +50,54 @@ class _ConsentFormScreenState extends State<ConsentFormScreen> {
 
   String surveyid = "";
   late TextEditingController _surveyIdController;
+Map<String, String>? _selectedSurvey;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     surveyid = widget.SurveyID!;
-    _surveyIdController = TextEditingController(
-      text: surveyid,
-    );
+
+  if (widget.SurveyID != null) {
+    _loadPreselectedSurvey(widget.SurveyID!);
+  }
+    // _surveyIdController = TextEditingController(
+    //   text: surveyid,
+    // );
     // Future.microtask(() => getData());
   }
+Future<void> _loadPreselectedSurvey(String surveyId) async {
+  final data =
+      await DatabaseHelper.instance.getApprovedAndAwaitingSurveys();
 
+  final match = data.firstWhere(
+    (e) => e.surveyId.toString() == surveyId,
+    // orElse: () => null,
+  );
+
+  if (match != null) {
+    setState(() {
+      _selectedSurvey = {
+        'id': match.surveyId.toString(),
+        'lat': match.landLatitude.toString(),
+        'long': match.landLongitude.toString(),
+        'area': match.landVillage.toString(),
+      };
+
+      this.surveyid = surveyId;
+    });
+  }
+}
+Future<void> loadDbFiles(String surveyID) async {
+  final media = await DatabaseHelper.instance
+      .getSurveyMedia(surveyID);
+
+  final consent = media.where((m) => m.mediaType == 'consent').toList();
+
+  setState(() {
+    selectedFiles = consent;
+  });
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -142,11 +178,10 @@ class _ConsentFormScreenState extends State<ConsentFormScreen> {
                     surveyForms: [],
                     consentForms: consentForm,
                   );
-                final List<String> consentPaths =
-    selectedFiles.map((file) => file.localPath).toList();
+                  final List<String> consentPaths =
+                      selectedFiles.map((file) => file.localPath).toList();
 
-final String pathsJson = jsonEncode(consentPaths);
-
+                  final String pathsJson = jsonEncode(consentPaths);
 
                   final rows =
                       await DatabaseHelper.instance.updateConsentFormBySurveyId(
@@ -158,52 +193,9 @@ final String pathsJson = jsonEncode(consentPaths);
                     print("✅ Consent form updated");
                   }
 
-//                   final db = await DatabaseHelper
-//                       .instance.database; // get your Database instance
-
-//                   List<Map<String, dynamic>> result = await db.query(
-//                     'surveys',
-//                     columns: ['consentForms'],
-//                     where: 'surveyId = ?',
-//                     whereArgs: [surveyid],
-//                   );
-
-//                   Map<String, dynamic>? existingRow;
-//                   if (result.isNotEmpty) {
-//                     existingRow = result.first; // get the first row
-//                   } else {
-//                     existingRow = null; // no row found
-//                   }
-
-//                   List<String> existingFiles = [];
-//                   if (existingRow != null &&
-//                       existingRow['consentForms'] != null) {
-//                     existingFiles = List<String>.from(
-//                         jsonDecode(existingRow['consentForms']));
-//                   }
-// // Get paths of new files
-//                   List<String> newFiles = selectedFiles
-//                       .where((file) => file != null)
-//                       .map((file) => file!.path)
-//                       .toList();
-
-// // Merge existing + new (avoid duplicates)
-//                   Set<String> allFiles = {...existingFiles, ...newFiles};
-//                   String pathsJson = jsonEncode(allFiles.toList());
-//                   int count = await DatabaseHelper.instance.updateRaw(
-//                     'UPDATE surveys SET consentForms = ? WHERE surveyId = ?',
-//                     [pathsJson, surveyid],
-//                   );
-
-//                   if (count > 0) {
-//                     print('Update successful! $count row(s) updated.');
-//                   } else {
-//                     print(
-//                         'Update failed or no row found with surveyId=$surveyid.');
-//                     showSnackBar(context, "Suvery Id Not Found in database");
-//                   }
-final provider = context.read<AppProvider>();
-await provider.refreshConsentForSurvey(surveyid);
+//
+                  final provider = context.read<AppProvider>();
+                  await provider.refreshConsentForSurvey(surveyid);
 
                   Navigator.pop(context, true);
                 }
@@ -221,65 +213,82 @@ await provider.refreshConsentForSurvey(surveyid);
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: ListView(
+          shrinkWrap: true,
           children: [
-            surveyid.isNotEmpty
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      TextWithAsterisk(
-                        text: t(context, "survey_no"),
-                        isAstrick: true,
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _surveyIdController,
-                        enabled: false, // 🔒 disable editing
-                        decoration: InputDecoration(
-                          hintText: t(context, "survey_no"),
-                          disabledBorder: OutlineInputBorder(
-                            borderRadius: borderRadius,
-                            borderSide: enableBorder,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : SearchableDropdown(
-                    title: t(context, "survey_no"),
-                    hintText: t(context, "select_survey_no"),
-                    asyncItems: (filter, loadProps) async {
-                      final data = await DatabaseHelper.instance
-                          .getApprovedAndAwaitingSurveys();
-                      final surveyMaps = data
-                          .map((e) => {
-                                'id': e.surveyId.toString(),
-                                'lat': e.landLatitude.toString(),
-                                'long': e.landLongitude.toString(),
-                                'area': e.landVillage.toString(),
-                              })
-                          .toList();
+            // surveyid.isNotEmpty
+            //     ? Column(
+            //         crossAxisAlignment: CrossAxisAlignment.start,
+            //         children: [
+            //           TextWithAsterisk(
+            //             text: t(context, "survey_no"),
+            //             isAstrick: true,
+            //           ),
+            //           const SizedBox(height: 6),
+            //           TextField(
+            //             controller: _surveyIdController,
+            //             enabled: false, // 🔒 disable editing
+            //             decoration: InputDecoration(
+            //               hintText: t(context, "survey_no"),
+            //               disabledBorder: OutlineInputBorder(
+            //                 borderRadius: borderRadius,
+            //                 borderSide: enableBorder,
+            //               ),
+            //             ),
+            //           ),
+            //         ],
+            //       )
+            //     :
+                SearchableDropdown(
+  title: t(context, "survey_no"),
+  hintText: t(context, "select_survey_no"),
 
-                      if (filter.isEmpty) return surveyMaps;
+  selectedItem: _selectedSurvey, // 🔥 REQUIRED
 
-                      return surveyMaps
-                          .where((e) =>
-                              e['id']!.contains(filter) ||
-                              e['lat']!.contains(filter) ||
-                              e['long']!.contains(filter) ||
-                              e['area']!.contains(filter))
-                          .toList();
-                    },
-                    filterKeys: ['id', 'lat', 'long', 'area'],
-                    compareKey: 'id',
-                    displayString: (item) =>
-                        "Survey No: ${item['id']},Lat:${item['lat']},Long: ${item['long']}, Area: ${item['area']}",
-                    onChanged: (value) {
-                      print("Selected: $value");
-                      surveyid = "${value!['id']}";
-                      print("${value!['id']}");
-                    },
-                  ),
+  asyncItems: (filter, loadProps) async {
+    final data =
+        await DatabaseHelper.instance.getApprovedAndAwaitingSurveys();
+
+    final surveyMaps = data
+        .map((e) => {
+              'id': e.surveyId.toString(),
+              'lat': e.landLatitude.toString(),
+              'long': e.landLongitude.toString(),
+              'area': e.landVillage.toString(),
+            })
+        .toList();
+
+    if (filter.isEmpty) return surveyMaps;
+
+    return surveyMaps.where((e) =>
+        e['id']!.contains(filter) ||
+        e['lat']!.contains(filter) ||
+        e['long']!.contains(filter) ||
+        e['area']!.contains(filter)).toList();
+  },
+
+  filterKeys: ['id', 'lat', 'long', 'area'],
+  compareKey: 'id',
+
+  displayString: (item) =>
+      "Survey No: ${item['id']}, Lat:${item['lat']}, Long:${item['long']}, Area:${item['area']}",
+
+  onChanged: (value) {
+    setState(() {
+      _selectedSurvey = {
+        'id': value!['id']!,
+        'lat': value['lat']!,
+        'long': value['long']!,
+        'area': value['area']!,
+      };
+      surveyid = value['id']!;
+
+      loadDbFiles(surveyid);
+    });
+  },
+),
+
+               
             SizedBox(
               height: 20,
             ),

@@ -4,8 +4,10 @@ import 'package:hyworth_land_survey/Provider/Basic_form_provider.dart';
 import 'package:hyworth_land_survey/Screens/LocationHelper.dart';
 import 'package:hyworth_land_survey/Utils/CommonStyles.dart';
 import 'package:hyworth_land_survey/Utils/HelperClass.dart';
+import 'package:hyworth_land_survey/Utils/ShowDialog.dart';
 import 'package:hyworth_land_survey/Utils/commoncolors.dart';
 import 'package:hyworth_land_survey/Utils/commonstrings.dart';
+import 'package:hyworth_land_survey/Utils/internetConnection.dart';
 import 'package:hyworth_land_survey/Utils/sizeConfig.dart';
 import 'package:hyworth_land_survey/widgets/CustomDropdownField.dart';
 import 'package:hyworth_land_survey/widgets/SearchableDropdown.dart';
@@ -28,7 +30,12 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
       askLocationConfirmation(context, "Substation");
     });
   }
-
+ final FocusNode _focusSink = FocusNode();
+@override
+void dispose() {
+  _focusSink.dispose();
+  super.dispose();
+}
   @override
   Widget build(BuildContext context) {
     final basicFormProvider = Provider.of<BasicFormProvider>(context);
@@ -89,6 +96,7 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
               'id': "${value!['id']}",
               'district_name': "${value!['district_name']}",
             };
+             _moveFocusAway();
           },
         ),
 // Taluka dropdown
@@ -131,6 +139,7 @@ class _SubStaionDetailFormState extends State<SubStaionDetailForm> {
               'id': "${value!['id']}",
               'taluka_name': "${value!['taluka_name']}",
             };
+             _moveFocusAway();
           },
         ),
 
@@ -167,6 +176,7 @@ print(rows.length);
       'id': value!['id']!,
       'village_name': value['village_name']!,
     };
+     _moveFocusAway();
   },
 ),
    
@@ -180,8 +190,17 @@ print(rows.length);
             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
           ],
           suffixIcon: GestureDetector(
-              onTap: () {
-                askLocationConfirmation(context, "Substation");
+              onTap: () async {
+              
+
+                 var status1 =
+                          await ConnectionDetector.checkInternetConnection();
+                          if (status1) {
+                  askLocationConfirmation(context, "Substation");
+                } else {
+                  showToast(
+                      "No Internet Connection Please fill location manually");
+                }
               },
               child: Icon(
                 Icons.location_on,
@@ -204,8 +223,15 @@ print(rows.length);
             FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
           ],
           suffixIcon: GestureDetector(
-              onTap: () {
-                askLocationConfirmation(context, "Substation");
+              onTap: () async {
+                var status1 =
+                          await ConnectionDetector.checkInternetConnection();
+                          if (status1) {
+                  askLocationConfirmation(context, "Substation");
+                } else {
+                  showToast(
+                      "No Internet Connection Please fill location manually");
+                }
               },
               child: Icon(
                 Icons.location_on,
@@ -224,7 +250,15 @@ print(rows.length);
           onChange: (val) {},
           maxCharacterLength: 10,
           isMaxCharacterHintVisible: false,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+                                    LengthLimitingTextInputFormatter(10),
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  textInputType:
+                                      const TextInputType.numberWithOptions(
+                                    signed: false,
+                                    decimal: false,
+                                  ),
           textEditingController:
               basicFormProvider.subStationInchargeContactController,
           autovalidateMode: AutovalidateMode.disabled,
@@ -260,7 +294,15 @@ print(rows.length);
           onChange: (val) {},
           maxCharacterLength: 10,
           isMaxCharacterHintVisible: false,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+           inputFormatters: [
+                                    LengthLimitingTextInputFormatter(10),
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  textInputType:
+                                      const TextInputType.numberWithOptions(
+                                    signed: false,
+                                    decimal: false,
+                                  ),
           textEditingController:
               basicFormProvider.subStationOperatorContactController,
           autovalidateMode: AutovalidateMode.disabled,
@@ -309,7 +351,15 @@ print(rows.length);
           autovalidateMode: AutovalidateMode.disabled,
           validator: basicFormProvider.validateState,
         ),
+         Focus(
+  focusNode: _focusSink,
+  child: const SizedBox.shrink(),
+),
       ],
     );
   }
+
+    void _moveFocusAway() {
+  FocusScope.of(context).requestFocus(_focusSink);
+}
 }

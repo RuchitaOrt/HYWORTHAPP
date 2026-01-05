@@ -64,6 +64,8 @@ dependencies:
   path_provider:
   flutter_spinkit: 
   flutter_local_notifications: 
+  connectivity_plus: 
+  synchronized:
 
   
   # flutter_google_places: ^0.3.0
